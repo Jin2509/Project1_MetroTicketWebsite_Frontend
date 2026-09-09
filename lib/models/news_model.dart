@@ -15,6 +15,7 @@ class NewsArticle {
   final List<String> contentParagraphs;
   final List<String> commuterTips;
   final bool isFeatured;
+  final String? imageUrl;
 
   const NewsArticle({
     required this.id,
@@ -30,6 +31,7 @@ class NewsArticle {
     required this.contentParagraphs,
     required this.commuterTips,
     this.isFeatured = false,
+    this.imageUrl,
   });
 }
 
@@ -46,6 +48,8 @@ class NewsData {
       author: 'Ban Quản lý Đường sắt Đô thị & MetroGo',
       gradientColors: [Color(0xFF2F6FED), Color(0xFF1E4DB7)],
       icon: PhosphorIconsRegular.train,
+      imageUrl:
+          'https://images.unsplash.com/photo-1517649763962-0c623266ddc0?auto=format&fit=crop&w=800&q=80',
       isFeatured: true,
       keyTakeaway:
           'Tuyến số 1 gồm 14 nhà ga (3 ga ngầm, 11 ga trên cao), hoạt động từ 05:00 đến 22:00 hàng ngày với tần suất 5 phút/chuyến vào giờ cao điểm.',
@@ -72,6 +76,8 @@ class NewsData {
       author: 'Đội ngũ Trải nghiệm Khách hàng',
       gradientColors: [Color(0xFF0284C7), Color(0xFF0369A1)],
       icon: PhosphorIconsRegular.qrCode,
+      imageUrl:
+          'https://images.unsplash.com/photo-1555421689-491a97ff2040?auto=format&fit=crop&w=800&q=80',
       keyTakeaway:
           'Đưa mã QR trên màn hình MetroGo cách mặt kính quét quang học khoảng 10cm ở phía bên tay phải của cổng kiểm soát.',
       contentParagraphs: [
@@ -96,6 +102,8 @@ class NewsData {
       author: 'Chương trình Hỗ trợ Học sinh - Sinh viên',
       gradientColors: [Color(0xFF10B981), Color(0xFF047857)],
       icon: PhosphorIconsRegular.graduationCap,
+      imageUrl:
+          'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=800&q=80',
       keyTakeaway:
           'Sinh viên đã xác thực chỉ phải trả 130.000 đ / tháng để đi lại không giới hạn trên toàn bộ mạng lưới metro.',
       contentParagraphs: [
@@ -120,6 +128,8 @@ class NewsData {
       author: 'Nhóm Kỹ thuật Metro',
       gradientColors: [Color(0xFF8B5CF6), Color(0xFF6D28D9)],
       icon: PhosphorIconsRegular.gitBranch,
+      imageUrl:
+          'https://images.unsplash.com/photo-1474487548417-781cb71495f3?auto=format&fit=crop&w=800&q=80',
       keyTakeaway:
           'Tầng B1 là khu thương mại và sảnh đón khách bán vé, trong khi các tầng B2, B3 và B4 phục vụ đón trả khách các tuyến đường sắt.',
       contentParagraphs: [
@@ -144,6 +154,8 @@ class NewsData {
       author: 'Hội đồng Phát triển Giao thông Xanh',
       gradientColors: [Color(0xFF059669), Color(0xFF065F46)],
       icon: PhosphorIconsRegular.leaf,
+      imageUrl:
+          'https://images.unsplash.com/photo-1509391365360-2e959784a276?auto=format&fit=crop&w=800&q=80',
       keyTakeaway:
           'Đi một chuyến tàu điện thay cho xe máy cá nhân giúp giảm tới 82% lượng phát thải carbon trên cùng hành trình.',
       contentParagraphs: [

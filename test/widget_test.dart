@@ -6,6 +6,7 @@ import 'package:metro_go/models/news_model.dart';
 import 'package:metro_go/models/ticket_model.dart';
 import 'package:metro_go/screens/ai/ai_assistant_screen.dart';
 import 'package:metro_go/screens/ai/compact_ai_chat_sheet.dart';
+import 'package:metro_go/screens/main_shell.dart';
 import 'package:metro_go/screens/map/live_map_screen.dart';
 import 'package:metro_go/screens/news/article_detail_screen.dart';
 import 'package:metro_go/screens/news/news_feed_screen.dart';
@@ -166,4 +167,55 @@ void main() {
     expect(find.text('Ga nào gần tôi nhất?'), findsOneWidget);
     expect(find.byType(TextField), findsOneWidget);
   });
+
+  testWidgets('MainShell Home tab renders Payment QR card, action buttons, and news', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: MainShell(),
+      ),
+    );
+    await tester.pump();
+
+    // 1. VietQR Payment Card
+    expect(find.text('Thanh toán bằng QR'), findsOneWidget);
+    expect(find.text('Chuyển khoản VietQR / Napas247'), findsOneWidget);
+    expect(find.text('VietQR 24/7'), findsOneWidget);
+    expect(find.text('Phóng to mã QR'), findsOneWidget);
+
+    // 2. Action Buttons Row
+    expect(find.text('Mua vé'), findsOneWidget);
+    expect(find.text('Quét vé đi tàu'), findsOneWidget);
+
+    // 3. Quick Route Card
+    expect(find.text('Tìm hành trình nhanh'), findsOneWidget);
+    expect(find.text('Ga Trung tâm Bến Thành'), findsOneWidget);
+    expect(find.text('Công viên Suối Tiên'), findsOneWidget);
+
+    // 4. News Section
+    expect(find.text('Tin tức & Cập nhật'), findsOneWidget);
+    expect(find.text('Xem tất cả'), findsOneWidget);
+
+    // 5. Test opening VietQR enlargement modal
+    await tester.tap(find.text('Phóng to mã QR'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.text('Mã QR Thanh toán VietQR'), findsOneWidget);
+    expect(find.text('1900 8888 68'), findsOneWidget);
+    expect(find.text('Vietcombank - CN TP. Hồ Chí Minh'), findsOneWidget);
+
+    // Close modal via Navigator pop
+    Navigator.of(tester.element(find.text('Mã QR Thanh toán VietQR'))).pop();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    // 6. Test opening Turnstile ticket sheet
+    await tester.tap(find.text('Quét vé đi tàu'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.text('VÉ QUÉT CỔNG SOÁT VÉ'), findsOneWidget);
+    expect(find.text('Đưa mã QR trước mắt quét tại cổng tự động nhà ga (cách 10cm)'), findsOneWidget);
+  });
 }
+
