@@ -1,29 +1,29 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../models/news_model.dart';
 import '../models/ticket_model.dart';
 import '../theme/app_theme.dart';
+import '../widgets/global_floating_ai_button.dart';
 import '../widgets/metro_app_bar.dart';
 import '../widgets/metro_bottom_nav.dart';
 import '../widgets/metro_card.dart';
 import '../widgets/primary_button.dart';
 import '../widgets/screen_switcher_sheet.dart';
-import 'map/live_map_screen.dart';
+import '../widgets/vietnam_map_background.dart';
+import 'map/search_map_screen.dart';
 import 'news/article_detail_screen.dart';
 import 'profile/profile_screen.dart';
-import 'search/search_screen.dart';
 import 'tickets/my_tickets_screen.dart';
 import 'tickets/ticket_detail_screen.dart';
 
 /// MainShell:
-/// The primary host scaffold of the application featuring MetroBottomNav with 5 tabs:
+/// The primary host scaffold of the application featuring MetroBottomNav with 4 tabs:
 /// 1. Home
-/// 2. Search
-/// 3. My Tickets
-/// 4. AI Assistant
-/// 5. Profile
+/// 2. Search & Map (Tra cứu & Bản đồ)
+/// 3. My Tickets (Vé của tôi)
+/// 4. Profile (Tài khoản)
+/// Includes global floating AI assistant button and Vietnam map background texture.
 class MainShell extends StatefulWidget {
   final int initialTab;
 
@@ -35,6 +35,25 @@ class MainShell extends StatefulWidget {
 
 class _MainShellState extends State<MainShell> {
   late int _currentIndex;
+  String _selectedCheckInStation = 'Bến Thành';
+  String _selectedExitStation = 'Bến Xe Suối Tiên';
+
+  static const List<String> _metroStations = [
+    'Bến Thành',
+    'Nhà Hát Thành Phố',
+    'Ba Son',
+    'Công Viên Văn Thánh',
+    'Tân Cảng',
+    'Thảo Điền',
+    'An Phú',
+    'Rạch Chiếc',
+    'Phước Long',
+    'Bình Thái',
+    'Thủ Đức',
+    'Khu Công Nghệ Cao',
+    'Đại Học Quốc Gia',
+    'Bến Xe Suối Tiên',
+  ];
 
   @override
   void initState() {
@@ -46,14 +65,22 @@ class _MainShellState extends State<MainShell> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: IndexedStack(
-        index: _currentIndex,
+      body: Stack(
         children: [
-          _buildHomeTab(),
-          const SearchScreen(),
-          const MyTicketsScreen(),
-          const LiveMapScreen(showBackButton: false),
-          const ProfileScreen(),
+          IndexedStack(
+            index: _currentIndex,
+            children: [
+              _buildHomeTab(),
+              const SearchMapScreen(showBackButton: false),
+              const MyTicketsScreen(),
+              const ProfileScreen(),
+            ],
+          ),
+          // Persistent Floating AI Chatbot Button on all tabs
+          const GlobalFloatingAiButton(
+            bottomOffset: 16,
+            rightOffset: 16,
+          ),
         ],
       ),
       bottomNavigationBar: MetroBottomNav(
@@ -68,7 +95,7 @@ class _MainShellState extends State<MainShell> {
   // Tab 0: Home Preview
   Widget _buildHomeTab() {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.transparent,
       appBar: MetroAppBar(
         showBackButton: false,
         useGradient: true,
@@ -138,17 +165,24 @@ class _MainShellState extends State<MainShell> {
           const ScreenSwitcherButton(),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.lg),
+      body: VietnamMapBackground(
+        opacity: 0.09,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. Payment QR Card (VietQR / Napas247)
-            _buildPaymentQrCard(context),
+            // 1. Active Ticket Boarding Pass Card
+            _buildActiveTicketCard(context),
 
             const SizedBox(height: AppSpacing.md),
 
-            // 2. Dual Action Buttons: Mua vé & Quét vé đi tàu
+            // 2. Check-in / Check-out Section
+            _buildCheckInOutSection(context),
+
+            const SizedBox(height: AppSpacing.md),
+
+            // 3. Action Buttons Row (Mua vé & Vé của tôi)
             _buildActionButtonsRow(context),
 
             const SizedBox(height: AppSpacing.xl),
@@ -163,215 +197,688 @@ class _MainShellState extends State<MainShell> {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
-  // --- 1. PAYMENT QR CARD (VietQR) ---
-  Widget _buildPaymentQrCard(BuildContext context) {
-    const String bankName = 'Vietcombank - CN TP. Hồ Chí Minh';
-    const String accountNo = '1900 8888 68';
-    const String accountOwner = 'BAN QUAN LY DUONG SAT DO THI TPHCM';
-    const String vietQrData =
-        '2|99|0909123456|BAN QUAN LY DUONG SAT DO THI TPHCM|1900888868|0|0|METROGO THANH TOAN VE';
+  // --- 1. ACTIVE TICKET BOARDING PASS CARD ---
+  Widget _buildActiveTicketCard(BuildContext context) {
+    return ListenableBuilder(
+      listenable: TicketStore.instance,
+      builder: (context, _) {
+        final activeTickets = TicketStore.instance.activeTickets;
+        final hasTicket = activeTickets.isNotEmpty;
+        final ticket = hasTicket ? activeTickets.first : null;
 
-    return MetroCard(
-      backgroundColor: AppColors.surface,
-      borderRadius: AppRadius.lg,
-      border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
-      padding: const EdgeInsets.all(AppSpacing.md),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header row with QR icon, Title and VietQR Badge
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: AppColors.primaryLight,
-                      borderRadius: BorderRadius.circular(AppRadius.md),
-                    ),
-                    child: const Center(
-                      child: PhosphorIcon(
-                        PhosphorIconsBold.qrCode,
-                        color: AppColors.primary,
-                        size: 20,
+        if (!hasTicket) {
+          // Empty State / All Tickets Expired
+          return MetroCard(
+            backgroundColor: AppColors.surface,
+            borderRadius: AppRadius.lg,
+            border: Border.all(color: AppColors.warning.withValues(alpha: 0.4)),
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: AppColors.warningLight,
+                        borderRadius: BorderRadius.circular(AppRadius.md),
+                      ),
+                      child: const Center(
+                        child: PhosphorIcon(
+                          PhosphorIconsBold.ticket,
+                          color: AppColors.warning,
+                          size: 20,
+                        ),
                       ),
                     ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Chưa có vé để lên tàu',
+                            style: AppTypography.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          Text(
+                            'Tất cả vé đã hết hạn hoặc chưa đặt vé',
+                            style: AppTypography.textTheme.bodySmall?.copyWith(
+                              color: AppColors.textSecondary,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.md),
+                Text(
+                  'Bạn cần mua vé để nhận mã QR quét qua cổng soát vé tại các ga Metro.',
+                  style: AppTypography.textTheme.bodySmall?.copyWith(
+                    color: AppColors.textSecondary,
+                    height: 1.4,
                   ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Thanh toán bằng QR',
-                        style: AppTypography.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () => Navigator.of(context).pushNamed('/booking'),
+                        icon: const PhosphorIcon(PhosphorIconsBold.plus, size: 16),
+                        label: const Text('Mua vé ngay'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(AppRadius.md),
+                          ),
                         ),
                       ),
-                      Text(
-                        'Chuyển khoản VietQR / Napas247',
-                        style: AppTypography.textTheme.bodySmall?.copyWith(
-                          color: AppColors.textSecondary,
-                          fontSize: 11,
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    OutlinedButton.icon(
+                      onPressed: () => _showNoActiveTicketDialog(context),
+                      icon: const PhosphorIcon(PhosphorIconsBold.qrCode, size: 16),
+                      label: const Text('Mã QR lên tàu'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.textSecondary,
+                        side: const BorderSide(color: AppColors.borderMedium),
+                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.md),
                         ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          );
+        }
+
+        // Active Ticket Available
+        return MetroCard(
+          backgroundColor: AppColors.surface,
+          borderRadius: AppRadius.lg,
+          border: Border.all(color: AppColors.primary.withValues(alpha: 0.25)),
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header with Badge
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: AppColors.primaryLight,
+                          borderRadius: BorderRadius.circular(AppRadius.md),
+                        ),
+                        child: const Center(
+                          child: PhosphorIcon(
+                            PhosphorIconsBold.ticket,
+                            color: AppColors.primary,
+                            size: 20,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            ticket!.title,
+                            style: AppTypography.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          Text(
+                            ticket.id,
+                            style: AppTypography.textTheme.bodySmall?.copyWith(
+                              color: AppColors.textSecondary,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.successLight,
+                      borderRadius: BorderRadius.circular(AppRadius.pill),
+                      border: Border.all(color: AppColors.success.withValues(alpha: 0.4)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 6,
+                          height: 6,
+                          decoration: const BoxDecoration(
+                            color: AppColors.success,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        const Text(
+                          'Vé hiệu lực',
+                          style: TextStyle(
+                            color: AppColors.success,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 10,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
+
+              const SizedBox(height: AppSpacing.md),
+
+              // Route & validity container
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.all(AppSpacing.md),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE8F5E9),
-                  borderRadius: BorderRadius.circular(AppRadius.pill),
-                  border: Border.all(color: const Color(0xFF81C784)),
+                  color: AppColors.surfaceSecondary,
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                  border: Border.all(color: AppColors.borderSubtle),
                 ),
                 child: Row(
-                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Container(
-                      width: 6,
-                      height: 6,
-                      decoration: const BoxDecoration(
-                        color: AppColors.success,
-                        shape: BoxShape.circle,
+                    // Miniature QR Preview (tappable to enlarge)
+                    GestureDetector(
+                      onTap: () => _showTurnstilePassSheet(context, ticket),
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(AppRadius.md),
+                          border: Border.all(color: AppColors.borderSubtle),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.2),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: QrImageView(
+                          data: ticket.qrCodeData,
+                          version: QrVersions.auto,
+                          size: 72,
+                          eyeStyle: const QrEyeStyle(
+                            eyeShape: QrEyeShape.square,
+                            color: AppColors.primary,
+                          ),
+                          dataModuleStyle: const QrDataModuleStyle(
+                            dataModuleShape: QrDataModuleShape.square,
+                            color: Color(0xFF13111C),
+                          ),
+                        ),
                       ),
                     ),
-                    const SizedBox(width: 4),
-                    const Text(
-                      'VietQR 24/7',
-                      style: TextStyle(
-                        color: Color(0xFF2E7D32),
-                        fontWeight: FontWeight.w700,
-                        fontSize: 10,
+
+                    const SizedBox(width: AppSpacing.md),
+
+                    // Route details
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Lộ trình lên tàu:',
+                            style: AppTypography.textTheme.labelSmall?.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '${ticket.originStation ?? "Bến Thành"} → ${ticket.destinationStation ?? "Suối Tiên"}',
+                            style: AppTypography.textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            ticket.validityText,
+                            style: AppTypography.textTheme.bodySmall?.copyWith(
+                              color: AppColors.textSecondary,
+                              fontSize: 11,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
               ),
+
+              const SizedBox(height: AppSpacing.sm),
+
+              // Prominent Button: Mã QR lên tàu
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () => _showTurnstilePassSheet(context, ticket),
+                  icon: const PhosphorIcon(
+                    PhosphorIconsBold.qrCode,
+                    size: 18,
+                    color: Colors.white,
+                  ),
+                  label: const Text('Mã QR lên tàu'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.md),
+                    ),
+                    elevation: 0,
+                  ),
+                ),
+              ),
             ],
           ),
-
-          const SizedBox(height: AppSpacing.md),
-
-          // Center visual container with QR and short guide
-          Container(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF7F9FC),
-              borderRadius: BorderRadius.circular(AppRadius.md),
-              border: Border.all(color: AppColors.borderSubtle),
-            ),
-            child: Row(
-              children: [
-                // QR Frame
-                Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(AppRadius.md),
-                    border: Border.all(color: AppColors.borderSubtle),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.04),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: QrImageView(
-                    data: vietQrData,
-                    version: QrVersions.auto,
-                    size: 96,
-                    eyeStyle: const QrEyeStyle(
-                      eyeShape: QrEyeShape.square,
-                      color: AppColors.primary,
-                    ),
-                    dataModuleStyle: const QrDataModuleStyle(
-                      dataModuleShape: QrDataModuleShape.square,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                ),
-
-                const SizedBox(width: AppSpacing.md),
-
-                // Description and instructions
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Quét mã để chuyển khoản thanh toán vé nhanh chóng qua app ngân hàng.',
-                        style: AppTypography.textTheme.bodySmall?.copyWith(
-                          color: AppColors.textPrimary,
-                          height: 1.4,
-                          fontSize: 12,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.xs),
-                      Text(
-                        'STK: $accountNo\n$bankName',
-                        style: AppTypography.textTheme.labelSmall?.copyWith(
-                          color: AppColors.textSecondary,
-                          fontSize: 11,
-                          height: 1.3,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: AppSpacing.sm),
-
-          // Secondary Action: Enlarge QR modal button
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: () => _showPaymentQrDetailModal(
-                context,
-                vietQrData,
-                bankName,
-                accountNo,
-                accountOwner,
-              ),
-              icon: const PhosphorIcon(
-                PhosphorIconsRegular.cornersOut,
-                size: 16,
-                color: AppColors.primary,
-              ),
-              label: const Text('Phóng to mã QR'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.primary,
-                side: const BorderSide(color: AppColors.primaryLight, width: 1.5),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppRadius.md),
-                ),
-                padding: const EdgeInsets.symmetric(vertical: 10),
-              ),
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
-  // --- ENLARGE PAYMENT QR MODAL ---
-  void _showPaymentQrDetailModal(
-    BuildContext context,
-    String qrData,
-    String bankName,
-    String accountNo,
-    String accountOwner,
-  ) {
+  // --- 2. CHECK-IN / CHECK-OUT SECTION ---
+  Widget _buildCheckInOutSection(BuildContext context) {
+    return ListenableBuilder(
+      listenable: TicketStore.instance,
+      builder: (context, _) {
+        final isCheckedIn = TicketStore.instance.isCheckedIn;
+        final checkInStation = TicketStore.instance.checkInStation;
+        final checkInTime = TicketStore.instance.checkInTime;
+        final activeTickets = TicketStore.instance.activeTickets;
+        final hasActiveTicket = activeTickets.isNotEmpty;
+
+        return MetroCard(
+          backgroundColor: isCheckedIn ? AppColors.surfaceSecondary : AppColors.surface,
+          borderRadius: AppRadius.lg,
+          border: Border.all(
+            color: isCheckedIn ? AppColors.primary : AppColors.borderSubtle,
+            width: isCheckedIn ? 1.5 : 1.0,
+          ),
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: isCheckedIn
+                              ? AppColors.primary.withValues(alpha: 0.2)
+                              : AppColors.surfaceSecondary,
+                          borderRadius: BorderRadius.circular(AppRadius.md),
+                        ),
+                        child: Center(
+                          child: PhosphorIcon(
+                            isCheckedIn
+                                ? PhosphorIconsBold.train
+                                : PhosphorIconsBold.signIn,
+                            color: isCheckedIn ? AppColors.primary : AppColors.textPrimary,
+                            size: 18,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            isCheckedIn
+                                ? 'Hành trình đang diễn ra'
+                                : 'Cổng soát vé ga',
+                            style: AppTypography.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          Text(
+                            isCheckedIn
+                                ? 'Đang trên tàu • Đã qua cổng vào'
+                                : 'Check-in / Check-out tự động',
+                            style: AppTypography.textTheme.bodySmall?.copyWith(
+                              color: AppColors.textSecondary,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: isCheckedIn
+                          ? AppColors.successLight
+                          : AppColors.surfaceSecondary,
+                      borderRadius: BorderRadius.circular(AppRadius.pill),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (isCheckedIn) ...[
+                          Container(
+                            width: 6,
+                            height: 6,
+                            decoration: const BoxDecoration(
+                              color: AppColors.success,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                        ],
+                        Text(
+                          isCheckedIn ? 'ĐÃ CHECK-IN' : 'Chưa vào ga',
+                          style: TextStyle(
+                            color: isCheckedIn ? AppColors.success : AppColors.textSecondary,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 10,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: AppSpacing.md),
+
+              if (!isCheckedIn) ...[
+                // NOT CHECKED IN STATE
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceSecondary,
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                    border: Border.all(color: AppColors.borderSubtle),
+                  ),
+                  child: Row(
+                    children: [
+                      const PhosphorIcon(
+                        PhosphorIconsBold.mapPin,
+                        size: 18,
+                        color: AppColors.primary,
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Text(
+                        'Ga vào:',
+                        style: AppTypography.textTheme.bodySmall?.copyWith(
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            value: _selectedCheckInStation,
+                            isExpanded: true,
+                            icon: const PhosphorIcon(
+                              PhosphorIconsBold.caretDown,
+                              size: 14,
+                              color: AppColors.textSecondary,
+                            ),
+                            style: AppTypography.textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary,
+                            ),
+                            items: _metroStations.map((station) {
+                              return DropdownMenuItem<String>(
+                                value: station,
+                                child: Text(station),
+                              );
+                            }).toList(),
+                            onChanged: (val) {
+                              if (val != null) {
+                                setState(() => _selectedCheckInStation = val);
+                              }
+                            },
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: AppSpacing.md),
+
+                // Button Check-in
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      if (!hasActiveTicket) {
+                        _showNoActiveTicketDialog(context);
+                      } else {
+                        TicketStore.instance.checkIn(
+                          _selectedCheckInStation,
+                          activeTickets.first,
+                        );
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Đã Check-in vào Ga $_selectedCheckInStation!'),
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(AppRadius.sm),
+                            ),
+                          ),
+                        );
+                        // Auto-open Turnstile QR code so passenger can scan
+                        _showTurnstilePassSheet(context, activeTickets.first);
+                      }
+                    },
+                    icon: const PhosphorIcon(
+                      PhosphorIconsBold.signIn,
+                      size: 18,
+                      color: Colors.white,
+                    ),
+                    label: const Text('Check-in vào ga'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.md),
+                      ),
+                      elevation: 0,
+                    ),
+                  ),
+                ),
+              ] else ...[
+                // CHECKED IN (IN TRANSIT) STATE
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceSecondary,
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                    border: Border.all(color: AppColors.borderSubtle),
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Ga đã vào:',
+                            style: AppTypography.textTheme.bodySmall?.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                          Row(
+                            children: [
+                              Text(
+                                'Ga $checkInStation',
+                                style: AppTypography.textTheme.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                              if (checkInTime != null) ...[
+                                const SizedBox(width: 6),
+                                Text(
+                                  '(${checkInTime.hour.toString().padLeft(2, '0')}:${checkInTime.minute.toString().padLeft(2, '0')})',
+                                  style: AppTypography.textTheme.bodySmall?.copyWith(
+                                    color: AppColors.textMuted,
+                                    fontSize: 11,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ],
+                      ),
+                      const Divider(height: 16, color: AppColors.borderSubtle),
+                      Row(
+                        children: [
+                          const PhosphorIcon(
+                            PhosphorIconsBold.mapPin,
+                            size: 18,
+                            color: AppColors.warning,
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Text(
+                            'Ga ra:',
+                            style: AppTypography.textTheme.bodySmall?.copyWith(
+                              color: AppColors.textSecondary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Expanded(
+                            child: DropdownButtonHideUnderline(
+                              child: DropdownButton<String>(
+                                value: _selectedExitStation,
+                                isExpanded: true,
+                                icon: const PhosphorIcon(
+                                  PhosphorIconsBold.caretDown,
+                                  size: 14,
+                                  color: AppColors.textSecondary,
+                                ),
+                                style: AppTypography.textTheme.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.textPrimary,
+                                ),
+                                items: _metroStations.map((station) {
+                                  return DropdownMenuItem<String>(
+                                    value: station,
+                                    child: Text(station),
+                                  );
+                                }).toList(),
+                                onChanged: (val) {
+                                  if (val != null) {
+                                    setState(() => _selectedExitStation = val);
+                                  }
+                                },
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: AppSpacing.md),
+
+                Row(
+                  children: [
+                    // Show QR again
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          if (hasActiveTicket) {
+                            _showTurnstilePassSheet(context, activeTickets.first);
+                          }
+                        },
+                        icon: const PhosphorIcon(
+                          PhosphorIconsBold.qrCode,
+                          size: 16,
+                          color: AppColors.primary,
+                        ),
+                        label: const Text('Mã QR qua cổng'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.primary,
+                          side: const BorderSide(color: AppColors.primary, width: 1.5),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(AppRadius.md),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    // Check-out button
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () => _handleCheckOut(context),
+                        icon: const PhosphorIcon(
+                          PhosphorIconsBold.signOut,
+                          size: 16,
+                          color: Colors.white,
+                        ),
+                        label: const Text('Check-out ra ga'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.success,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(AppRadius.md),
+                          ),
+                          elevation: 0,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // --- CHECK-OUT HANDLER & SUCCESS MODAL ---
+  void _handleCheckOut(BuildContext context) {
+    final entryStation = TicketStore.instance.checkInStation ?? 'Bến Thành';
+    final exitStation = _selectedExitStation;
+
+    TicketStore.instance.checkOut(exitStation);
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -388,142 +895,94 @@ class _MainShellState extends State<MainShell> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Center(
-              child: Container(
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: AppColors.borderMedium,
-                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                  child: Container(
+                    width: 36,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: AppColors.borderMedium,
+                      borderRadius: BorderRadius.circular(AppRadius.sm),
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const PhosphorIcon(
-                  PhosphorIconsBold.qrCode,
-                  color: AppColors.primary,
-                  size: 20,
+                const SizedBox(height: AppSpacing.lg),
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: const BoxDecoration(
+                    color: AppColors.successLight,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Center(
+                    child: PhosphorIcon(
+                      PhosphorIconsBold.checkCircle,
+                      color: AppColors.success,
+                      size: 32,
+                    ),
+                  ),
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(height: AppSpacing.md),
                 Text(
-                  'Mã QR Thanh toán VietQR',
+                  'Check-out thành công!',
                   style: AppTypography.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Bạn đã hoàn thành chuyến đi và qua cổng kiểm soát an toàn.',
+                  style: AppTypography.textTheme.bodySmall?.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceSecondary,
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                    border: Border.all(color: AppColors.borderSubtle),
+                  ),
+                  child: Column(
+                    children: [
+                      _buildDetailRow('Ga vào', 'Ga $entryStation'),
+                      const Divider(height: 16, color: AppColors.borderSubtle),
+                      _buildDetailRow('Ga ra', 'Ga $exitStation'),
+                      const Divider(height: 16, color: AppColors.borderSubtle),
+                      _buildDetailRow(
+                        'Thời gian ra ga',
+                        '${DateTime.now().hour.toString().padLeft(2, '0')}:${DateTime.now().minute.toString().padLeft(2, '0')}',
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.md),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                    child: const Text('Hoàn tất'),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 4),
-            Text(
-              'Quét bằng ứng dụng ngân hàng bất kỳ để chuyển khoản',
-              style: AppTypography.textTheme.bodySmall?.copyWith(
-                color: AppColors.textSecondary,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppSpacing.lg),
-
-            // Large QR code
-            Container(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(AppRadius.lg),
-                border: Border.all(color: AppColors.borderSubtle),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.06),
-                    blurRadius: 16,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: QrImageView(
-                data: qrData,
-                version: QrVersions.auto,
-                size: 200,
-                eyeStyle: const QrEyeStyle(
-                  eyeShape: QrEyeShape.square,
-                  color: AppColors.primary,
-                ),
-                dataModuleStyle: const QrDataModuleStyle(
-                  dataModuleShape: QrDataModuleShape.square,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-            ),
-
-            const SizedBox(height: AppSpacing.lg),
-
-            // Bank details card
-            Container(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF7F9FC),
-                borderRadius: BorderRadius.circular(AppRadius.md),
-                border: Border.all(color: AppColors.borderSubtle),
-              ),
-              child: Column(
-                children: [
-                  _buildDetailRow('Ngân hàng', bankName),
-                  const Divider(height: 16, color: AppColors.borderSubtle),
-                  _buildDetailRow(
-                    'Số tài khoản',
-                    accountNo,
-                    isHighlight: true,
-                    onCopy: () {
-                      Clipboard.setData(ClipboardData(text: accountNo));
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: const Text('Đã sao chép số tài khoản'),
-                          behavior: SnackBarBehavior.floating,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(AppRadius.sm),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                  const Divider(height: 16, color: AppColors.borderSubtle),
-                  _buildDetailRow('Chủ tài khoản', accountOwner),
-                  const Divider(height: 16, color: AppColors.borderSubtle),
-                  _buildDetailRow('Nội dung chuyển khoản', 'METROGO [SĐT / Mã vé]'),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: AppSpacing.lg),
-
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () => Navigator.of(context).pop(),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.md),
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                ),
-                child: const Text('Đóng'),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
-    ),
-  ),
-);
+    );
   }
 
-  // --- 2. ACTION BUTTONS ROW ---
+  // --- 3. ACTION BUTTONS ROW ---
   Widget _buildActionButtonsRow(BuildContext context) {
-    final activeTickets = TicketStore.instance.activeTickets;
-    final hasActiveTicket = activeTickets.isNotEmpty;
-
     return Row(
       children: [
         // Button 1: Mua vé
@@ -557,18 +1016,13 @@ class _MainShellState extends State<MainShell> {
 
         const SizedBox(width: AppSpacing.sm),
 
-        // Button 2: Quét vé đi tàu (Dùng vé soát cổng)
+        // Button 2: Quản lý vé
         Expanded(
-          child: ElevatedButton.icon(
+          child: OutlinedButton.icon(
             onPressed: () {
-              if (hasActiveTicket) {
-                _showTurnstilePassSheet(context, activeTickets.first);
-              } else {
-                _showNoActiveTicketDialog(context);
-              }
+              setState(() => _currentIndex = 2);
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFF0F6FF),
+            style: OutlinedButton.styleFrom(
               foregroundColor: AppColors.primary,
               side: const BorderSide(color: AppColors.primary, width: 1.5),
               padding: const EdgeInsets.symmetric(vertical: 14),
@@ -577,31 +1031,13 @@ class _MainShellState extends State<MainShell> {
               ),
               elevation: 0,
             ),
-            icon: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                const PhosphorIcon(
-                  PhosphorIconsBold.ticket,
-                  color: AppColors.primary,
-                  size: 18,
-                ),
-                if (hasActiveTicket)
-                  Positioned(
-                    right: -4,
-                    top: -4,
-                    child: Container(
-                      width: 8,
-                      height: 8,
-                      decoration: const BoxDecoration(
-                        color: AppColors.success,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                  ),
-              ],
+            icon: const PhosphorIcon(
+              PhosphorIconsBold.ticket,
+              color: AppColors.primary,
+              size: 18,
             ),
             label: Text(
-              'Quét vé đi tàu',
+              'Vé của tôi',
               style: AppTypography.textTheme.labelLarge?.copyWith(
                 color: AppColors.primary,
                 fontWeight: FontWeight.w700,
@@ -694,7 +1130,7 @@ class _MainShellState extends State<MainShell> {
                 ),
                 dataModuleStyle: const QrDataModuleStyle(
                   dataModuleShape: QrDataModuleShape.square,
-                  color: AppColors.textPrimary,
+                  color: Color(0xFF13111C),
                 ),
               ),
             ),
@@ -705,7 +1141,7 @@ class _MainShellState extends State<MainShell> {
             Container(
               padding: const EdgeInsets.all(AppSpacing.md),
               decoration: BoxDecoration(
-                color: const Color(0xFFF7F9FC),
+                color: AppColors.surfaceSecondary,
                 borderRadius: BorderRadius.circular(AppRadius.md),
                 border: Border.all(color: AppColors.borderSubtle),
               ),
@@ -723,7 +1159,7 @@ class _MainShellState extends State<MainShell> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFE6F9EE),
+                          color: AppColors.successLight,
                           borderRadius: BorderRadius.circular(AppRadius.pill),
                         ),
                         child: const Text(
@@ -846,7 +1282,7 @@ class _MainShellState extends State<MainShell> {
               width: 56,
               height: 56,
               decoration: const BoxDecoration(
-                color: Color(0xFFFFF4E5),
+                color: AppColors.warningLight,
                 shape: BoxShape.circle,
               ),
               child: const Center(
@@ -1030,7 +1466,7 @@ class _MainShellState extends State<MainShell> {
                         return Container(
                           width: 88,
                           height: 88,
-                          color: const Color(0xFFF1F5F9),
+                          color: AppColors.surfaceSecondary,
                           child: const Center(
                             child: SizedBox(
                               width: 20,

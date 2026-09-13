@@ -6,13 +6,20 @@ import 'package:metro_go/models/news_model.dart';
 import 'package:metro_go/models/ticket_model.dart';
 import 'package:metro_go/screens/ai/ai_assistant_screen.dart';
 import 'package:metro_go/screens/ai/compact_ai_chat_sheet.dart';
+import 'package:metro_go/screens/booking/payment_screen.dart';
 import 'package:metro_go/screens/main_shell.dart';
 import 'package:metro_go/screens/map/live_map_screen.dart';
+import 'package:metro_go/screens/map/search_map_screen.dart';
 import 'package:metro_go/screens/news/article_detail_screen.dart';
 import 'package:metro_go/screens/news/news_feed_screen.dart';
 import 'package:metro_go/screens/notifications/notifications_screen.dart';
+import 'package:metro_go/screens/tickets/my_tickets_screen.dart';
+import 'package:metro_go/theme/app_theme.dart';
+import 'package:metro_go/widgets/global_floating_ai_button.dart';
 import 'package:metro_go/widgets/metro_ticket_card.dart';
 import 'package:metro_go/widgets/status_badge.dart';
+import 'package:metro_go/widgets/vietnam_map_background.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 void main() {
   testWidgets('MetroGo smoke test - renders splash screen', (WidgetTester tester) async {
@@ -168,7 +175,9 @@ void main() {
     expect(find.byType(TextField), findsOneWidget);
   });
 
-  testWidgets('MainShell Home tab renders Payment QR card, action buttons, and news', (WidgetTester tester) async {
+  testWidgets('MainShell Home tab renders Active Ticket card, Check-in/Check-out section, and news', (WidgetTester tester) async {
+    TicketStore.instance.resetDefaultsForTesting();
+
     await tester.pumpWidget(
       const MaterialApp(
         home: MainShell(),
@@ -176,46 +185,281 @@ void main() {
     );
     await tester.pump();
 
-    // 1. VietQR Payment Card
-    expect(find.text('Thanh toán bằng QR'), findsOneWidget);
-    expect(find.text('Chuyển khoản VietQR / Napas247'), findsOneWidget);
-    expect(find.text('VietQR 24/7'), findsOneWidget);
-    expect(find.text('Phóng to mã QR'), findsOneWidget);
+    // 1. Active Ticket Card
+    expect(find.text('Vé tháng không giới hạn'), findsOneWidget);
+    expect(find.text('Vé hiệu lực'), findsOneWidget);
+    expect(find.text('Mã QR lên tàu'), findsWidgets);
 
-    // 2. Action Buttons Row
+    // 2. Check-in / Check-out Section
+    expect(find.text('Cổng soát vé ga'), findsOneWidget);
+    expect(find.text('Chưa vào ga'), findsOneWidget);
+    expect(find.text('Check-in vào ga'), findsOneWidget);
+
+    // 3. Action Buttons Row
     expect(find.text('Mua vé'), findsOneWidget);
-    expect(find.text('Quét vé đi tàu'), findsOneWidget);
+    expect(find.widgetWithText(OutlinedButton, 'Vé của tôi'), findsOneWidget);
 
-    // 3. Quick Route Card
+    // 4. Quick Route Card & News Section
     expect(find.text('Tìm hành trình nhanh'), findsOneWidget);
     expect(find.text('Ga Trung tâm Bến Thành'), findsOneWidget);
-    expect(find.text('Công viên Suối Tiên'), findsOneWidget);
-
-    // 4. News Section
     expect(find.text('Tin tức & Cập nhật'), findsOneWidget);
-    expect(find.text('Xem tất cả'), findsOneWidget);
 
-    // 5. Test opening VietQR enlargement modal
-    await tester.tap(find.text('Phóng to mã QR'));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
-
-    expect(find.text('Mã QR Thanh toán VietQR'), findsOneWidget);
-    expect(find.text('1900 8888 68'), findsOneWidget);
-    expect(find.text('Vietcombank - CN TP. Hồ Chí Minh'), findsOneWidget);
-
-    // Close modal via Navigator pop
-    Navigator.of(tester.element(find.text('Mã QR Thanh toán VietQR'))).pop();
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
-
-    // 6. Test opening Turnstile ticket sheet
-    await tester.tap(find.text('Quét vé đi tàu'));
+    // 5. Test opening Turnstile QR code sheet from button
+    await tester.tap(find.text('Mã QR lên tàu').first);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
 
     expect(find.text('VÉ QUÉT CỔNG SOÁT VÉ'), findsOneWidget);
     expect(find.text('Đưa mã QR trước mắt quét tại cổng tự động nhà ga (cách 10cm)'), findsOneWidget);
+
+    // Close QR sheet
+    Navigator.of(tester.element(find.text('VÉ QUÉT CỔNG SOÁT VÉ'))).pop();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+
+    // 6. Test Check-in vào ga
+    await tester.ensureVisible(find.text('Check-in vào ga'));
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.tap(find.text('Check-in vào ga'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+
+    // Turnstile QR sheet auto-opens on check-in
+    expect(find.text('VÉ QUÉT CỔNG SOÁT VÉ'), findsOneWidget);
+
+    // Close QR sheet
+    Navigator.of(tester.element(find.text('VÉ QUÉT CỔNG SOÁT VÉ'))).pop();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+
+    // State is now checked-in
+    expect(find.text('ĐÃ CHECK-IN'), findsOneWidget);
+    expect(find.text('Hành trình đang diễn ra'), findsOneWidget);
+    expect(find.text('Check-out ra ga'), findsOneWidget);
+
+    // 7. Test Check-out ra ga
+    await tester.ensureVisible(find.text('Check-out ra ga'));
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.tap(find.text('Check-out ra ga'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+
+    expect(find.text('Check-out thành công!'), findsOneWidget);
+    expect(find.text('Bạn đã hoàn thành chuyến đi và qua cổng kiểm soát an toàn.'), findsOneWidget);
+
+    // Dismiss completion modal
+    await tester.tap(find.text('Hoàn tất'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+
+    // State is back to ready to check in
+    expect(find.text('Chưa vào ga'), findsOneWidget);
+  });
+
+  testWidgets('MainShell Home tab shows notice when no active tickets exist', (WidgetTester tester) async {
+    TicketStore.instance.clearActiveTicketsForTesting();
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: MainShell(),
+      ),
+    );
+    await tester.pump();
+
+    // Expect empty / expired ticket notice
+    expect(find.text('Chưa có vé để lên tàu'), findsOneWidget);
+    expect(find.text('Tất cả vé đã hết hạn hoặc chưa đặt vé'), findsOneWidget);
+    expect(find.text('Mua vé ngay'), findsWidgets);
+
+    // Tap QR button when having no ticket
+    await tester.tap(find.text('Mã QR lên tàu'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.text('Bạn chưa có vé hiệu lực'), findsOneWidget);
+
+    // Dismiss dialog
+    Navigator.of(tester.element(find.text('Bạn chưa có vé hiệu lực'))).pop();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    // Tap Check-in without ticket
+    await tester.tap(find.text('Check-in vào ga'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.text('Bạn chưa có vé hiệu lực'), findsOneWidget);
+
+    // Reset store
+    TicketStore.instance.resetDefaultsForTesting();
+  });
+
+  testWidgets('SearchMapScreen renders search bar, line filters, and station list', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: SearchMapScreen(),
+      ),
+    );
+    await tester.pump();
+
+    // 1. Search bar at top
+    expect(find.text('Tìm kiếm tuyến, nhà ga (Bến Thành, Ba Son...)'), findsOneWidget);
+
+    // 2. Filter line chips
+    expect(find.textContaining('Tuyến 1'), findsWidgets);
+    expect(find.textContaining('Tuyến 2'), findsWidgets);
+
+    // 3. Station list below map
+    expect(find.textContaining('Danh sách các ga hiện có'), findsOneWidget);
+    expect(find.text('Bến Thành'), findsWidgets);
+
+    // 4. Test search query filtering
+    await tester.enterText(find.byType(TextField), 'Ba Son');
+    await tester.pump();
+
+    expect(find.text('Ba Son'), findsWidgets);
+    expect(find.text('Bến Xe Suối Tiên'), findsNothing);
+  });
+
+  testWidgets('MyTicketsScreen renders active tickets section followed by new ticket booking section', (WidgetTester tester) async {
+    TicketStore.instance.resetDefaultsForTesting();
+    tester.view.physicalSize = const Size(800, 1400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: MyTicketsScreen(),
+      ),
+    );
+    await tester.pump();
+
+    // 1. Active tickets section
+    expect(find.text('VÉ ĐÃ ĐẶT (CÒN HOẠT ĐỘNG)'), findsOneWidget);
+    expect(find.textContaining('vé khả dụng'), findsOneWidget);
+
+    // 2. New ticket booking section
+    await tester.scrollUntilVisible(
+      find.text('ĐẶT VÉ MỚI'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('ĐẶT VÉ MỚI'), findsOneWidget);
+    expect(find.text('Vé lượt (Single Ride)'), findsOneWidget);
+    expect(find.text('Vé ngày (Day Pass)'), findsOneWidget);
+    expect(find.text('Vé tháng (Monthly Pass)'), findsOneWidget);
+    expect(find.text('Đặt vé mới ngay'), findsOneWidget);
+  });
+
+  testWidgets('PaymentScreen opens payment QR modal and shows celebration on completion', (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(800, 1200);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+
+    final bookingData = {
+      'ticketType': TicketType.singleRide,
+      'title': 'Vé lượt: Bến Thành → Ba Son',
+      'origin': 'Bến Thành',
+      'destination': 'Ba Son',
+      'validity': 'Hiệu lực 4 giờ',
+      'quantity': 1,
+      'totalPrice': 15000,
+    };
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: PaymentScreen(bookingData: bookingData),
+        routes: {
+          '/payment-success': (context) => const Scaffold(body: Text('Success Page Mock')),
+        },
+      ),
+    );
+    await tester.pump();
+
+    // 1. Check order summary
+    expect(find.text('THÔNG TIN ĐƠN HÀNG'), findsOneWidget);
+    expect(find.text('Vé lượt: Bến Thành → Ba Son'), findsOneWidget);
+    expect(find.text('PHƯƠNG THỨC THANH TOÁN'), findsOneWidget);
+
+    // 2. Tap Confirm Payment to open QR Modal
+    await tester.tap(find.textContaining('Xác nhận thanh toán'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    // 3. QR Modal is shown
+    expect(find.text('Quét mã QR thanh toán'), findsOneWidget);
+    expect(find.textContaining('9823 4812 3840'), findsOneWidget);
+    expect(find.text('Tôi đã thanh toán thành công'), findsOneWidget);
+
+    // 4. Tap "Tôi đã thanh toán thành công"
+    await tester.tap(find.text('Tôi đã thanh toán thành công'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
+
+    // 5. Celebration dialog is shown
+    expect(find.text('Thanh toán thành công!'), findsOneWidget);
+    expect(find.textContaining('Đang phát hành mã QR vé cho bạn...'), findsOneWidget);
+
+    // Finish celebration delay
+    await tester.pump(const Duration(seconds: 3));
+  });
+
+  test('Proton Dark Theme colors and tokens are correctly defined', () {
+    expect(AppColors.primary, const Color(0xFF6D4AFF));
+    expect(AppColors.background, const Color(0xFF13111C));
+    expect(AppColors.surface, const Color(0xFF1E1A2B));
+    expect(AppColors.surfaceSecondary, const Color(0xFF272238));
+    expect(AppColors.textPrimary, const Color(0xFFFFFFFF));
+    expect(AppColors.textSecondary, const Color(0xFFCECAE3));
+    expect(AppColors.primaryText, const Color(0xFFB59DFF));
+    expect(AppColors.success, const Color(0xFF00D492));
+    expect(AppTheme.darkTheme.brightness, Brightness.dark);
+  });
+
+  testWidgets('VietnamMapBackground renders child and custom paint canvas', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: VietnamMapBackground(
+            opacity: 0.09,
+            child: Text('Map Content'),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text('Map Content'), findsOneWidget);
+    expect(find.byType(CustomPaint), findsWidgets);
+    expect(find.byType(VietnamMapBackground), findsOneWidget);
+  });
+
+  testWidgets('MainShell renders GlobalFloatingAiButton across all screens', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: MainShell(),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.byType(GlobalFloatingAiButton), findsOneWidget);
+    expect(find.byType(VietnamMapBackground), findsWidgets);
+  });
+
+  testWidgets('SearchMapScreen renders enlarged 380px map and full screen button', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: SearchMapScreen(),
+      ),
+    );
+    await tester.pump();
+
+    // Verify "Xem toàn bản đồ" header button
+    expect(find.text('Xem toàn bản đồ'), findsWidgets);
+    expect(find.text('Bản đồ tuyến Metro'), findsOneWidget);
+    expect(find.byIcon(PhosphorIconsBold.cornersOut), findsWidgets);
   });
 }
+
+
 

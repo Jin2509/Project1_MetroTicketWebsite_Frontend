@@ -8,6 +8,7 @@ import '../../widgets/metro_ticket_card.dart';
 import '../../widgets/primary_button.dart';
 import '../../widgets/screen_switcher_sheet.dart';
 import '../../widgets/status_badge.dart';
+import '../../widgets/vietnam_map_background.dart';
 import 'history_filter_sheet.dart';
 import 'ticket_detail_screen.dart';
 
@@ -82,53 +83,56 @@ class _MyTicketsScreenState extends State<MyTicketsScreen>
               ScreenSwitcherButton(),
             ],
           ),
-          body: SafeArea(
-            child: Column(
-              children: [
-                // Top Custom Pill Tab Selector
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.lg,
-                    vertical: AppSpacing.xs,
-                  ),
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(AppRadius.md),
-                      border: Border.all(color: AppColors.borderSubtle),
-                      boxShadow: AppShadows.subtle,
+          body: VietnamMapBackground(
+            opacity: 0.08,
+            child: SafeArea(
+              child: Column(
+                children: [
+                  // Top Custom Pill Tab Selector
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.lg,
+                      vertical: AppSpacing.xs,
                     ),
-                    child: Row(
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(AppRadius.md),
+                        border: Border.all(color: AppColors.borderSubtle),
+                        boxShadow: AppShadows.subtle,
+                      ),
+                      child: Row(
+                        children: [
+                          _tabButton(
+                            index: 0,
+                            title: 'Đang hoạt động (${activeList.length})',
+                            icon: PhosphorIconsRegular.ticket,
+                          ),
+                          _tabButton(
+                            index: 1,
+                            title: 'Lịch sử (${TicketStore.instance.historyTickets.length})',
+                            icon: PhosphorIconsRegular.clockCounterClockwise,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: AppSpacing.sm),
+
+                  // Tab Content
+                  Expanded(
+                    child: TabBarView(
+                      controller: _tabController,
                       children: [
-                        _tabButton(
-                          index: 0,
-                          title: 'Đang hoạt động (${activeList.length})',
-                          icon: PhosphorIconsRegular.ticket,
-                        ),
-                        _tabButton(
-                          index: 1,
-                          title: 'Lịch sử (${TicketStore.instance.historyTickets.length})',
-                          icon: PhosphorIconsRegular.clockCounterClockwise,
-                        ),
+                        _buildActiveTab(activeList),
+                        _buildHistoryTab(historyList),
                       ],
                     ),
                   ),
-                ),
-
-                const SizedBox(height: AppSpacing.sm),
-
-                // Tab Content
-                Expanded(
-                  child: TabBarView(
-                    controller: _tabController,
-                    children: [
-                      _buildActiveTab(activeList),
-                      _buildHistoryTab(historyList),
-                    ],
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         );
@@ -178,111 +182,300 @@ class _MyTicketsScreenState extends State<MyTicketsScreen>
     );
   }
 
-  // Active Tab: Large digital-ticket cards with perforated detail
+  // Active Tab: Active tickets followed by New Ticket Booking section
   Widget _buildActiveTab(List<Ticket> activeTickets) {
-    if (activeTickets.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+    return ListView(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      children: [
+        // SECTION 1: CÁC VÉ ĐÃ ĐẶT (CÒN HOẠT ĐỘNG)
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryLight,
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
+                  ),
+                  child: const PhosphorIcon(
+                    PhosphorIconsRegular.ticket,
+                    color: AppColors.primary,
+                    size: 16,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                Text(
+                  'VÉ ĐÃ ĐẶT (CÒN HOẠT ĐỘNG)',
+                  style: AppTypography.textTheme.labelSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textSecondary,
+                    letterSpacing: 1.0,
+                  ),
+                ),
+              ],
+            ),
             Container(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                color: AppColors.primaryLight,
-                shape: BoxShape.circle,
+                color: activeTickets.isNotEmpty
+                    ? AppColors.successLight
+                    : AppColors.surfaceSecondary,
+                borderRadius: BorderRadius.circular(AppRadius.pill),
               ),
-              child: const PhosphorIcon(
-                PhosphorIconsRegular.ticket,
-                size: 40,
-                color: AppColors.primary,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Text(
-              'Không có vé đang hoạt động',
-              style: AppTypography.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              'Mua vé lượt hoặc vé ngày, vé tháng để di chuyển nhanh chóng.',
-              style: AppTypography.textTheme.bodySmall,
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            SizedBox(
-              width: 180,
-              child: PrimaryButton(
-                text: 'Đặt vé ngay',
-                onPressed: () => Navigator.of(context).pushNamed('/booking'),
+              child: Text(
+                '${activeTickets.length} vé khả dụng',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: activeTickets.isNotEmpty
+                      ? AppColors.success
+                      : AppColors.textSecondary,
+                ),
               ),
             ),
           ],
         ),
-      );
-    }
+        const SizedBox(height: AppSpacing.sm),
 
-    return ListView(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      children: [
-        ...activeTickets.map((ticket) {
-          return Padding(
-            padding: const EdgeInsets.only(bottom: AppSpacing.lg),
-            child: MetroTicketCard(
-              ticket: ticket,
-              onTap: () => _openDetail(ticket),
-            ),
-          );
-        }),
-
-        // Quick CTA to book another ticket
-        MetroCard(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          onTap: () {
-            Navigator.of(context).pushNamed('/booking');
-          },
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppColors.primaryLight,
-                  borderRadius: BorderRadius.circular(AppRadius.md),
-                ),
-                child: const PhosphorIcon(
-                  PhosphorIconsRegular.plus,
-                  color: AppColors.primary,
-                  size: 20,
-                ),
+        if (activeTickets.isNotEmpty) ...[
+          ...activeTickets.map((ticket) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.md),
+              child: MetroTicketCard(
+                ticket: ticket,
+                onTap: () => _openDetail(ticket),
               ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+            );
+          }),
+        ] else ...[
+          MetroCard(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            backgroundColor: AppColors.surface,
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: const BoxDecoration(
+                    color: AppColors.surfaceSecondary,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const PhosphorIcon(
+                    PhosphorIconsRegular.ticket,
+                    size: 32,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  'Chưa có vé nào đang hoạt động',
+                  style: AppTypography.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Tất cả vé bạn mua sẽ xuất hiện tại đây kèm mã QR để quét qua cổng soát vé.',
+                  textAlign: TextAlign.center,
+                  style: AppTypography.textTheme.bodySmall?.copyWith(
+                    color: AppColors.textSecondary,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+        ],
+
+        const SizedBox(height: AppSpacing.md),
+
+        // SECTION 2: ĐẶT VÉ MỚI
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryLight,
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
+                  ),
+                  child: const PhosphorIcon(
+                    PhosphorIconsRegular.plusCircle,
+                    color: AppColors.primary,
+                    size: 16,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                Text(
+                  'ĐẶT VÉ MỚI',
+                  style: AppTypography.textTheme.labelSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textSecondary,
+                    letterSpacing: 1.0,
+                  ),
+                ),
+              ],
+            ),
+            Text(
+              'Chọn loại vé bên dưới',
+              style: AppTypography.textTheme.bodySmall?.copyWith(
+                color: AppColors.textMuted,
+                fontSize: 11,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.sm),
+
+        // 3 Ticket Package Preview Cards
+        _buildTicketOptionCard(
+          title: 'Vé lượt (Single Ride)',
+          price: 'Từ 6.000 đ',
+          subtitle: 'Di chuyển 1 chặng linh hoạt giữa 14 ga Tuyến 1',
+          badge: 'Phổ thông',
+          badgeColor: AppColors.primary,
+          icon: PhosphorIconsRegular.train,
+          onTap: () => Navigator.of(context).pushNamed(
+            '/booking',
+            arguments: TicketType.singleRide,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+
+        _buildTicketOptionCard(
+          title: 'Vé ngày (Day Pass)',
+          price: '40.000 đ / ngày',
+          subtitle: 'Đi lại không giới hạn toàn mạng lưới trong 24 giờ',
+          badge: 'Khuyên dùng',
+          badgeColor: AppColors.warning,
+          icon: PhosphorIconsRegular.calendarCheck,
+          onTap: () => Navigator.of(context).pushNamed(
+            '/booking',
+            arguments: TicketType.dayPass,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+
+        _buildTicketOptionCard(
+          title: 'Vé tháng (Monthly Pass)',
+          price: '300.000 đ / 30 ngày',
+          subtitle: 'Tiết kiệm tối đa cho học sinh, sinh viên và người đi làm',
+          badge: 'Tiết kiệm 50%',
+          badgeColor: AppColors.success,
+          icon: PhosphorIconsRegular.sparkle,
+          onTap: () => Navigator.of(context).pushNamed(
+            '/booking',
+            arguments: TicketType.monthlyPass,
+          ),
+        ),
+
+        const SizedBox(height: AppSpacing.lg),
+
+        // Prominent Button "Đặt vé mới ngay"
+        PrimaryButton(
+          text: 'Đặt vé mới ngay',
+          leadingIcon: PhosphorIconsRegular.ticket,
+          trailingIcon: PhosphorIconsRegular.arrowRight,
+          onPressed: () => Navigator.of(context).pushNamed('/booking'),
+        ),
+
+        const SizedBox(height: AppSpacing.xl),
+      ],
+    );
+  }
+
+  Widget _buildTicketOptionCard({
+    required String title,
+    required String price,
+    required String subtitle,
+    required String badge,
+    required Color badgeColor,
+    required PhosphorIconData icon,
+    required VoidCallback onTap,
+  }) {
+    return MetroCard(
+      onTap: onTap,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: badgeColor.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(AppRadius.md),
+            ),
+            child: Center(
+              child: PhosphorIcon(
+                icon,
+                color: badgeColor,
+                size: 22,
+              ),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Đặt thêm vé',
-                      style: AppTypography.textTheme.titleSmall?.copyWith(
+                      title,
+                      style: AppTypography.textTheme.labelLarge?.copyWith(
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                    Text(
-                      'Vé lượt, vé ngày hoặc gói vé tháng tiện lợi',
-                      style: AppTypography.textTheme.bodySmall,
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: badgeColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(AppRadius.pill),
+                      ),
+                      child: Text(
+                        badge,
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: badgeColor,
+                        ),
+                      ),
                     ),
                   ],
                 ),
-              ),
-              const PhosphorIcon(
-                PhosphorIconsRegular.caretRight,
-                size: 16,
-                color: AppColors.textMuted,
-              ),
-            ],
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: AppTypography.textTheme.bodySmall?.copyWith(
+                    fontSize: 11,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  price,
+                  style: AppTypography.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.primary,
+                    fontSize: 13,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-        const SizedBox(height: AppSpacing.xl),
-      ],
+          const SizedBox(width: AppSpacing.xs),
+          const PhosphorIcon(
+            PhosphorIconsRegular.caretRight,
+            size: 16,
+            color: AppColors.textMuted,
+          ),
+        ],
+      ),
     );
   }
 

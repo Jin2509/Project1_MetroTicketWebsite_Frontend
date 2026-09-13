@@ -5,6 +5,7 @@ import '../../theme/app_theme.dart';
 import '../../widgets/metro_app_bar.dart';
 import '../../widgets/metro_card.dart';
 import '../../widgets/screen_switcher_sheet.dart';
+import '../../widgets/vietnam_map_background.dart';
 import '../booking/booking_flow_screen.dart';
 import '../map/live_map_screen.dart';
 import '../tickets/ticket_detail_screen.dart';
@@ -346,12 +347,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               icon: const PhosphorIcon(
                 PhosphorIconsRegular.checks,
                 size: 16,
-                color: AppColors.primary,
+                color: AppColors.primaryText,
               ),
               label: Text(
                 'Đã đọc',
                 style: AppTypography.textTheme.labelMedium?.copyWith(
-                  color: AppColors.primary,
+                  color: AppColors.primaryText,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -359,38 +360,42 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           const ScreenSwitcherButton(),
         ],
       ),
-      body: Column(
-        children: [
-          // Filter Chips Row
-          _buildFilterBar(),
+      body: VietnamMapBackground(
+        opacity: 0.08,
+        showBeacon: false,
+        child: Column(
+          children: [
+            // Filter Chips Row
+            _buildFilterBar(),
 
-          // Notifications List
-          Expanded(
-            child: filtered.isEmpty
-                ? _buildEmptyState()
-                : ListView(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppSpacing.lg,
-                      AppSpacing.sm,
-                      AppSpacing.lg,
-                      AppSpacing.xl,
+            // Notifications List
+            Expanded(
+              child: filtered.isEmpty
+                  ? _buildEmptyState()
+                  : ListView(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.lg,
+                        AppSpacing.sm,
+                        AppSpacing.lg,
+                        AppSpacing.xl,
+                      ),
+                      children: [
+                        if (todayList.isNotEmpty) ...[
+                          _buildSectionHeader('HÔM NAY'),
+                          const SizedBox(height: AppSpacing.xs),
+                          ...todayList.map((item) => _buildDismissibleTile(item)),
+                          const SizedBox(height: AppSpacing.md),
+                        ],
+                        if (earlierList.isNotEmpty) ...[
+                          _buildSectionHeader('TRƯỚC ĐÓ'),
+                          const SizedBox(height: AppSpacing.xs),
+                          ...earlierList.map((item) => _buildDismissibleTile(item)),
+                        ],
+                      ],
                     ),
-                    children: [
-                      if (todayList.isNotEmpty) ...[
-                        _buildSectionHeader('HÔM NAY'),
-                        const SizedBox(height: AppSpacing.xs),
-                        ...todayList.map((item) => _buildDismissibleTile(item)),
-                        const SizedBox(height: AppSpacing.md),
-                      ],
-                      if (earlierList.isNotEmpty) ...[
-                        _buildSectionHeader('TRƯỚC ĐÓ'),
-                        const SizedBox(height: AppSpacing.xs),
-                        ...earlierList.map((item) => _buildDismissibleTile(item)),
-                      ],
-                    ],
-                  ),
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -418,10 +423,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             onSelected: (_) {
               setState(() => _selectedFilter = filter);
             },
-            selectedColor: AppColors.primaryLight,
-            backgroundColor: AppColors.surface,
+            selectedColor: AppColors.primary,
+            backgroundColor: AppColors.surfaceSecondary,
             labelStyle: AppTypography.textTheme.bodySmall?.copyWith(
-              color: isSelected ? AppColors.primary : AppColors.textSecondary,
+              color: isSelected ? Colors.white : AppColors.textSecondary,
               fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
             ),
             shape: RoundedRectangleBorder(
@@ -506,11 +511,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         child: MetroCard(
           padding: const EdgeInsets.all(AppSpacing.md),
           backgroundColor:
-              item.isRead ? AppColors.surface : const Color(0xFFF4F8FE),
+              item.isRead ? AppColors.surface : AppColors.surfaceSecondary,
           border: Border.all(
             color: item.isRead
                 ? AppColors.borderSubtle
-                : AppColors.primary.withValues(alpha: 0.25),
+                : AppColors.primary.withValues(alpha: 0.45),
+            width: item.isRead ? 1.0 : 1.2,
           ),
           onTap: () => _handleNotificationAction(item),
           child: Row(
@@ -582,7 +588,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                               item.actionLabel!,
                               style: AppTypography.textTheme.labelMedium
                                   ?.copyWith(
-                                color: AppColors.primary,
+                                color: AppColors.primaryText,
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
@@ -590,7 +596,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                             const PhosphorIcon(
                               PhosphorIconsRegular.arrowRight,
                               size: 13,
-                              color: AppColors.primary,
+                              color: AppColors.primaryText,
                             ),
                           ],
                         ),
@@ -613,22 +619,22 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
     switch (category) {
       case NotificationCategory.trainDelay:
-        bgColor = const Color(0xFFFFF4E5);
+        bgColor = AppColors.warningLight;
         iconColor = AppColors.warning;
         icon = PhosphorIconsRegular.warningCircle;
         break;
       case NotificationCategory.ticketAlert:
         bgColor = AppColors.primaryLight;
-        iconColor = AppColors.primary;
+        iconColor = AppColors.primaryText;
         icon = PhosphorIconsRegular.ticket;
         break;
       case NotificationCategory.promo:
-        bgColor = const Color(0xFFE6F9EE);
-        iconColor = AppColors.success;
+        bgColor = AppColors.successLight;
+        iconColor = AppColors.successText;
         icon = PhosphorIconsRegular.sparkle;
         break;
       case NotificationCategory.system:
-        bgColor = const Color(0xFFF1F5F9);
+        bgColor = AppColors.surfaceMuted;
         iconColor = AppColors.textSecondary;
         icon = PhosphorIconsRegular.info;
         break;
@@ -640,6 +646,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(color: iconColor.withValues(alpha: 0.3)),
       ),
       child: Center(
         child: PhosphorIcon(

@@ -402,13 +402,16 @@ class _CompactAiChatSheetState extends State<CompactAiChatSheet> {
                     vertical: 10,
                   ),
                   decoration: BoxDecoration(
-                    color: isUser ? AppColors.primary : const Color(0xFFF1F5F9),
+                    color: isUser ? AppColors.primary : AppColors.surfaceSecondary,
                     borderRadius: BorderRadius.only(
                       topLeft: const Radius.circular(AppRadius.xl),
                       topRight: const Radius.circular(AppRadius.xl),
                       bottomLeft: Radius.circular(isUser ? AppRadius.xl : AppRadius.sm),
                       bottomRight: Radius.circular(isUser ? AppRadius.sm : AppRadius.xl),
                     ),
+                    border: isUser
+                        ? null
+                        : Border.all(color: AppColors.borderSubtle, width: 1),
                     boxShadow: isUser
                         ? [
                             BoxShadow(
@@ -485,8 +488,11 @@ class _CompactAiChatSheetState extends State<CompactAiChatSheet> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE6F9EE),
+                    color: AppColors.successLight,
                     borderRadius: BorderRadius.circular(AppRadius.sm),
+                    border: Border.all(
+                      color: AppColors.success.withValues(alpha: 0.3),
+                    ),
                   ),
                   child: Text(
                     data['departure'] ?? '',
@@ -655,11 +661,14 @@ class _CompactAiChatSheetState extends State<CompactAiChatSheet> {
                   decoration: BoxDecoration(
                     color: AppColors.primaryLight,
                     borderRadius: BorderRadius.circular(AppRadius.sm),
+                    border: Border.all(
+                      color: AppColors.primary.withValues(alpha: 0.3),
+                    ),
                   ),
                   child: Text(
                     data['interchange'] ?? '',
                     style: const TextStyle(
-                      color: AppColors.primary,
+                      color: AppColors.primaryText,
                       fontWeight: FontWeight.w700,
                       fontSize: 10,
                     ),
@@ -683,8 +692,9 @@ class _CompactAiChatSheetState extends State<CompactAiChatSheet> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
-              color: const Color(0xFFF1F5F9),
+              color: AppColors.surfaceSecondary,
               borderRadius: BorderRadius.circular(AppRadius.xl),
+              border: Border.all(color: AppColors.borderSubtle),
             ),
             child: const Row(
               mainAxisSize: MainAxisSize.min,
@@ -716,13 +726,13 @@ class _CompactAiChatSheetState extends State<CompactAiChatSheet> {
           return ActionChip(
             label: Text(reply),
             labelStyle: AppTypography.textTheme.bodySmall?.copyWith(
-              color: AppColors.primary,
+              color: AppColors.primaryText,
               fontWeight: FontWeight.w600,
               fontSize: 12,
             ),
-            backgroundColor: AppColors.primaryLight,
+            backgroundColor: AppColors.surfaceSecondary,
             side: BorderSide(
-              color: AppColors.primary.withValues(alpha: 0.2),
+              color: AppColors.primary.withValues(alpha: 0.4),
             ),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppRadius.pill),

@@ -36,19 +36,14 @@ class MetroBottomNav extends StatelessWidget {
       activeIcon: PhosphorIconsFill.house,
     ),
     MetroBottomNavItem(
-      label: 'Tra cứu',
-      regularIcon: PhosphorIconsRegular.magnifyingGlass,
-      activeIcon: PhosphorIconsBold.magnifyingGlass,
+      label: 'Tra cứu & Bản đồ',
+      regularIcon: PhosphorIconsRegular.mapTrifold,
+      activeIcon: PhosphorIconsFill.mapTrifold,
     ),
     MetroBottomNavItem(
       label: 'Vé của tôi',
       regularIcon: PhosphorIconsRegular.ticket,
       activeIcon: PhosphorIconsFill.ticket,
-    ),
-    MetroBottomNavItem(
-      label: 'Bản đồ',
-      regularIcon: PhosphorIconsRegular.navigationArrow,
-      activeIcon: PhosphorIconsFill.navigationArrow,
     ),
     MetroBottomNavItem(
       label: 'Tài khoản',
@@ -61,16 +56,16 @@ class MetroBottomNav extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: const Color(0xFF151220),
         border: const Border(
           top: BorderSide(
-            color: AppColors.borderSubtle,
+            color: Color(0xFF262038),
             width: 1.0,
           ),
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF1A1D29).withValues(alpha: 0.05),
+            color: Colors.black.withValues(alpha: 0.35),
             blurRadius: 20,
             offset: const Offset(0, -4),
           ),
@@ -91,8 +86,8 @@ class MetroBottomNav extends StatelessWidget {
                 child: InkWell(
                   onTap: () => onTap(index),
                   borderRadius: BorderRadius.circular(AppRadius.md),
-                  splashColor: AppColors.primary.withValues(alpha: 0.08),
-                  highlightColor: AppColors.primary.withValues(alpha: 0.04),
+                  splashColor: AppColors.primary.withValues(alpha: 0.15),
+                  highlightColor: AppColors.primary.withValues(alpha: 0.08),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
                     curve: Curves.easeInOut,
@@ -104,20 +99,29 @@ class MetroBottomNav extends StatelessWidget {
                         AnimatedContainer(
                           duration: const Duration(milliseconds: 200),
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 3,
+                            horizontal: 16,
+                            vertical: 4,
                           ),
                           decoration: BoxDecoration(
                             color: isSelected
-                                ? AppColors.primaryLight
+                                ? AppColors.primary
                                 : Colors.transparent,
                             borderRadius: BorderRadius.circular(AppRadius.pill),
+                            boxShadow: isSelected
+                                ? [
+                                    BoxShadow(
+                                      color: AppColors.primary.withValues(alpha: 0.4),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ]
+                                : null,
                           ),
                           child: PhosphorIcon(
                             isSelected ? item.activeIcon : item.regularIcon,
-                            size: 22,
+                            size: 20,
                             color: isSelected
-                                ? AppColors.primary
+                                ? Colors.white
                                 : AppColors.textSecondary,
                           ),
                         ),
@@ -129,9 +133,9 @@ class MetroBottomNav extends StatelessWidget {
                           style: AppTypography.textTheme.labelSmall?.copyWith(
                             fontSize: 11,
                             fontWeight:
-                                isSelected ? FontWeight.w600 : FontWeight.w500,
+                                isSelected ? FontWeight.w700 : FontWeight.w500,
                             color: isSelected
-                                ? AppColors.primary
+                                ? Colors.white
                                 : AppColors.textSecondary,
                           ),
                         ),

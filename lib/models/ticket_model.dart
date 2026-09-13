@@ -143,8 +143,107 @@ class TicketStore extends ChangeNotifier {
   List<Ticket> get activeTickets => List.unmodifiable(_activeTickets);
   List<Ticket> get historyTickets => List.unmodifiable(_historyTickets);
 
+  bool _isCheckedIn = false;
+  String? _checkInStation;
+  DateTime? _checkInTime;
+  Ticket? _currentTransitTicket;
+
+  bool get isCheckedIn => _isCheckedIn;
+  String? get checkInStation => _checkInStation;
+  DateTime? get checkInTime => _checkInTime;
+  Ticket? get currentTransitTicket => _currentTransitTicket;
+
+  Ticket? get latestActiveTicket => _activeTickets.isNotEmpty ? _activeTickets.first : null;
+
   void addTicket(Ticket ticket) {
     _activeTickets.insert(0, ticket);
+    notifyListeners();
+  }
+
+  void checkIn(String station, Ticket ticket) {
+    _isCheckedIn = true;
+    _checkInStation = station;
+    _checkInTime = DateTime.now();
+    _currentTransitTicket = ticket;
+    notifyListeners();
+  }
+
+  void checkOut(String exitStation) {
+    if (_currentTransitTicket != null) {
+      if (_currentTransitTicket!.type == TicketType.singleRide) {
+        _activeTickets.removeWhere((t) => t.id == _currentTransitTicket!.id);
+        _historyTickets.insert(
+          0,
+          Ticket(
+            id: _currentTransitTicket!.id,
+            title: _currentTransitTicket!.title,
+            type: _currentTransitTicket!.type,
+            originStation: _checkInStation ?? _currentTransitTicket!.originStation,
+            destinationStation: exitStation,
+            validityText:
+                'Đã hoàn thành chuyến đi lúc ${DateTime.now().hour.toString().padLeft(2, '0')}:${DateTime.now().minute.toString().padLeft(2, '0')}',
+            status: TicketStatus.used,
+            priceVnd: _currentTransitTicket!.priceVnd,
+            purchaseDate: _currentTransitTicket!.purchaseDate,
+            lineCode: _currentTransitTicket!.lineCode,
+            qrCodeData: '${_currentTransitTicket!.qrCodeData}:USED',
+            passengerName: _currentTransitTicket!.passengerName,
+          ),
+        );
+      }
+    }
+    _isCheckedIn = false;
+    _checkInStation = null;
+    _checkInTime = null;
+    _currentTransitTicket = null;
+    notifyListeners();
+  }
+
+  void clearActiveTicketsForTesting() {
+    _activeTickets.clear();
+    _isCheckedIn = false;
+    _checkInStation = null;
+    _checkInTime = null;
+    _currentTransitTicket = null;
+    notifyListeners();
+  }
+
+  void resetDefaultsForTesting() {
+    _activeTickets.clear();
+    _activeTickets.addAll([
+      Ticket(
+        id: 'MG-L1-2026-9842',
+        title: 'Vé tháng không giới hạn',
+        type: TicketType.monthlyPass,
+        originStation: 'Bến Thành',
+        destinationStation: 'Suối Tiên',
+        validityText: 'Hạn dùng đến 25/10/2026 (30 ngày)',
+        status: TicketStatus.paid,
+        priceVnd: 260000,
+        purchaseDate: DateTime(2026, 9, 25),
+        lineCode: 'Toàn tuyến',
+        qrCodeData: 'METROGO:TICKET:MG-L1-2026-9842:MONTHLY:ALL_LINES:ALEX_NGUYEN',
+        passengerName: 'Alex Nguyễn',
+      ),
+      Ticket(
+        id: 'MG-L1-2026-4412',
+        title: 'Vé lượt (Nhanh)',
+        type: TicketType.singleRide,
+        originStation: 'Bến Thành',
+        destinationStation: 'Nhà Hát Thành Phố',
+        validityText: 'Có giá trị trong 4 giờ sau khi mua',
+        status: TicketStatus.paid,
+        priceVnd: 15000,
+        purchaseDate: DateTime(2026, 9, 9, 8, 30),
+        lineCode: 'L1',
+        qrCodeData: 'METROGO:TICKET:MG-L1-2026-4412:SINGLE:BT-NHTP:ALEX_NGUYEN',
+        passengerName: 'Alex Nguyễn',
+      ),
+    ]);
+    _isCheckedIn = false;
+    _checkInStation = null;
+    _checkInTime = null;
+    _currentTransitTicket = null;
     notifyListeners();
   }
 }

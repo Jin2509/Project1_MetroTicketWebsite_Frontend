@@ -6,6 +6,7 @@ import '../../models/transit_models.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/metro_card.dart';
 import '../../widgets/screen_switcher_sheet.dart';
+import '../../widgets/vietnam_map_background.dart';
 import '../booking/booking_flow_screen.dart';
 import '../search/route_detail_screen.dart';
 
@@ -281,61 +282,64 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
           ),
         ),
       ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // CHAT MESSAGES AREA
-            Expanded(
-              child: ListView.builder(
-                controller: _scrollController,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.md,
-                  vertical: AppSpacing.lg,
+      body: VietnamMapBackground(
+        opacity: 0.08,
+        showBeacon: false,
+        child: SafeArea(
+          child: Column(
+            children: [
+              // CHAT MESSAGES AREA
+              Expanded(
+                child: ListView.builder(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.lg,
+                  ),
+                  itemCount: _messages.length + (_isTyping ? 1 : 0),
+                  itemBuilder: (context, index) {
+                    if (index == _messages.length && _isTyping) {
+                      return const _TypingIndicatorBubble();
+                    }
+                    final msg = _messages[index];
+                    return _buildMessageBubble(msg);
+                  },
                 ),
-                itemCount: _messages.length + (_isTyping ? 1 : 0),
-                itemBuilder: (context, index) {
-                  if (index == _messages.length && _isTyping) {
-                    return const _TypingIndicatorBubble();
-                  }
-                  final msg = _messages[index];
-                  return _buildMessageBubble(msg);
-                },
               ),
-            ),
 
-            // QUICK-REPLY SUGGESTION CHIPS
-            Container(
-              height: 40,
-              margin: const EdgeInsets.only(bottom: 6),
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-                itemCount: _quickReplies.length,
-                separatorBuilder: (context, index) =>
-                    const SizedBox(width: AppSpacing.xs),
-                itemBuilder: (context, index) {
-                  final reply = _quickReplies[index];
-                  return ActionChip(
-                    label: Text(
-                      reply,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.primaryDark,
+              // QUICK-REPLY SUGGESTION CHIPS
+              Container(
+                height: 40,
+                margin: const EdgeInsets.only(bottom: 6),
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                  itemCount: _quickReplies.length,
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(width: AppSpacing.xs),
+                  itemBuilder: (context, index) {
+                    final reply = _quickReplies[index];
+                    return ActionChip(
+                      label: Text(
+                        reply,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primaryText,
+                        ),
                       ),
-                    ),
-                    backgroundColor: AppColors.primaryLight,
-                    side: BorderSide(
-                      color: AppColors.primary.withValues(alpha: 0.2),
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppRadius.pill),
-                    ),
-                    onPressed: () => _sendMessage(reply),
-                  );
-                },
+                      backgroundColor: AppColors.surfaceSecondary,
+                      side: BorderSide(
+                        color: AppColors.primary.withValues(alpha: 0.4),
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.pill),
+                      ),
+                      onPressed: () => _sendMessage(reply),
+                    );
+                  },
+                ),
               ),
-            ),
 
             // INPUT BAR AT BOTTOM
             Container(
@@ -434,8 +438,9 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildMessageBubble(ChatMessage msg) {
     return Padding(
@@ -532,13 +537,16 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
                     decoration: BoxDecoration(
                       color: AppColors.primaryLight,
                       borderRadius: BorderRadius.circular(AppRadius.sm),
+                      border: Border.all(
+                        color: AppColors.primary.withValues(alpha: 0.3),
+                      ),
                     ),
                     child: Text(
                       data['line'],
                       style: const TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.primary,
+                        color: AppColors.primaryText,
                       ),
                     ),
                   ),
@@ -546,7 +554,7 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
                     data['fare'],
                     style: const TextStyle(
                       fontWeight: FontWeight.w700,
-                      color: AppColors.primary,
+                      color: AppColors.primaryText,
                     ),
                   ),
                 ],
@@ -720,7 +728,7 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
               Text(
                 data['interchange'],
                 style: AppTypography.textTheme.bodySmall?.copyWith(
-                  color: AppColors.primary,
+                  color: AppColors.primaryText,
                   fontWeight: FontWeight.w600,
                 ),
               ),

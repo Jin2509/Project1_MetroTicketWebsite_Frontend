@@ -1,13 +1,18 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import '../../models/ticket_model.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/confetti_overlay.dart';
 import '../../widgets/metro_app_bar.dart';
 import '../../widgets/metro_card.dart';
 import '../../widgets/primary_button.dart';
 import '../../widgets/screen_switcher_sheet.dart';
+import '../../widgets/secondary_button.dart';
 import '../../widgets/status_badge.dart';
+import '../../widgets/vietnam_map_background.dart';
 
 enum PaymentMethodType {
   zalopay,
@@ -70,7 +75,7 @@ enum PaymentMethodType {
 
 /// Screen: Payment Screen
 /// Order summary card, payment method radio-cards (ZaloPay, MoMo, VNPay, Bank Card),
-/// pinned "Confirm Payment" button.
+/// QR Payment modal, celebration effects with confetti, pinned "Confirm Payment" button.
 class PaymentScreen extends StatefulWidget {
   final Map<String, dynamic> bookingData;
 
@@ -83,6 +88,14 @@ class PaymentScreen extends StatefulWidget {
 class _PaymentScreenState extends State<PaymentScreen> {
   PaymentMethodType _selectedPayment = PaymentMethodType.zalopay;
   bool _isProcessing = false;
+  bool _isCelebrating = false;
+  late final String _orderCode;
+
+  @override
+  void initState() {
+    super.initState();
+    _orderCode = 'METRO${Random().nextInt(89999) + 10000}';
+  }
 
   String _formatVnd(int amount) {
     final str = amount.toString();
@@ -98,11 +111,277 @@ class _PaymentScreenState extends State<PaymentScreen> {
     return '${buffer.toString().split('').reversed.join('')} đ';
   }
 
-  void _confirmPayment() async {
-    setState(() => _isProcessing = true);
-    await Future.delayed(const Duration(milliseconds: 1100));
+  void _showPaymentQrModal(BuildContext context, int totalPrice, String title) {
+    // Generate VietQR or Partner QR data string
+    final qrData = '00020101021238540010A000000727012600069704220112982348123840208QRIBFTTA520460115303704540$totalPrice'
+        '5802VN62240820$_orderCode'
+        '6304';
 
-    if (!mounted) return;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (modalContext) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.vertical(
+              top: Radius.circular(AppRadius.xl),
+            ),
+          ),
+          padding: EdgeInsets.only(
+            left: AppSpacing.lg,
+            right: AppSpacing.lg,
+            top: AppSpacing.md,
+            bottom: MediaQuery.of(modalContext).viewInsets.bottom + AppSpacing.xl,
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // Drag Handle
+                Center(
+                  child: Container(
+                    width: 44,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: AppColors.border,
+                      borderRadius: BorderRadius.circular(AppRadius.pill),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+
+                // Title & Subtitle
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Quét mã QR thanh toán',
+                            style: AppTypography.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Sử dụng ứng dụng ${_selectedPayment.title}',
+                            style: AppTypography.textTheme.bodySmall?.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: const PhosphorIcon(
+                        PhosphorIconsRegular.x,
+                        size: 20,
+                        color: AppColors.textSecondary,
+                      ),
+                      onPressed: () => Navigator.pop(modalContext),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.md),
+
+                // QR Code Container
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(AppRadius.xl),
+                    border: Border.all(color: AppColors.borderSubtle, width: 1.5),
+                    boxShadow: AppShadows.subtle,
+                  ),
+                  child: Column(
+                    children: [
+                      // Partner Tag
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: _selectedPayment.brandColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(AppRadius.pill),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            PhosphorIcon(
+                              _selectedPayment.icon,
+                              size: 14,
+                              color: _selectedPayment.brandColor,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              _selectedPayment.title,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: _selectedPayment.brandColor,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      // Large QR Code
+                      QrImageView(
+                        data: qrData,
+                        version: QrVersions.auto,
+                        size: 190.0,
+                        padding: EdgeInsets.zero,
+                      ),
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        'Quét mã để thanh toán đúng ${_formatVnd(totalPrice)}',
+                        style: AppTypography.textTheme.bodySmall?.copyWith(
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+
+                // Transfer Details Card
+                MetroCard(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  child: Column(
+                    children: [
+                      _qrDetailRow('Đơn vị thụ hưởng', 'HURC1 - ĐƯỜNG SẮT ĐÔ THỊ TPHCM'),
+                      const Divider(height: 14),
+                      _qrDetailRow(
+                        'Số tài khoản / Mã ví',
+                        '9823 4812 3840',
+                        canCopy: true,
+                        onCopy: () {
+                          Clipboard.setData(const ClipboardData(text: '982348123840'));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Đã sao chép số tài khoản'),
+                              duration: Duration(seconds: 1),
+                            ),
+                          );
+                        },
+                      ),
+                      const Divider(height: 14),
+                      _qrDetailRow(
+                        'Nội dung chuyển khoản',
+                        _orderCode,
+                        canCopy: true,
+                        onCopy: () {
+                          Clipboard.setData(ClipboardData(text: _orderCode));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Đã sao chép nội dung chuyển khoản'),
+                              duration: Duration(seconds: 1),
+                            ),
+                          );
+                        },
+                      ),
+                      const Divider(height: 14),
+                      _qrDetailRow(
+                        'Số tiền thanh toán',
+                        _formatVnd(totalPrice),
+                        isBoldHighlight: true,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+
+                // Confirm Payment Button
+                PrimaryButton(
+                  text: 'Tôi đã thanh toán thành công',
+                  leadingIcon: PhosphorIconsRegular.checkCircle,
+                  onPressed: () {
+                    Navigator.pop(modalContext);
+                    _handlePaymentSuccess();
+                  },
+                ),
+                const SizedBox(height: AppSpacing.sm),
+
+                SecondaryButton(
+                  text: 'Đổi phương thức thanh toán',
+                  onPressed: () => Navigator.pop(modalContext),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _qrDetailRow(
+    String label,
+    String value, {
+    bool canCopy = false,
+    bool isBoldHighlight = false,
+    VoidCallback? onCopy,
+  }) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Expanded(
+          child: Text(
+            label,
+            style: AppTypography.textTheme.bodySmall?.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Flexible(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Flexible(
+                child: Text(
+                  value,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.textTheme.bodyMedium?.copyWith(
+                    fontWeight: isBoldHighlight ? FontWeight.w800 : FontWeight.w600,
+                    color: isBoldHighlight ? AppColors.primary : AppColors.textPrimary,
+                    fontSize: isBoldHighlight ? 15 : 13,
+                  ),
+                ),
+              ),
+              if (canCopy) ...[
+                const SizedBox(width: 6),
+                GestureDetector(
+                  onTap: onCopy,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryLight,
+                      borderRadius: BorderRadius.circular(AppRadius.sm),
+                    ),
+                    child: const PhosphorIcon(
+                      PhosphorIconsRegular.copy,
+                      size: 13,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _handlePaymentSuccess() async {
+    setState(() {
+      _isCelebrating = true;
+      _isProcessing = true;
+    });
 
     // Generate unique Ticket ID
     final randomId = 'MG-L1-2026-${Random().nextInt(8999) + 1000}';
@@ -132,7 +411,14 @@ class _PaymentScreenState extends State<PaymentScreen> {
     // Save into global TicketStore
     TicketStore.instance.addTicket(newTicket);
 
-    setState(() => _isProcessing = false);
+    // Keep celebration visible with confetti shower for 1.8 seconds
+    await Future.delayed(const Duration(milliseconds: 1800));
+
+    if (!mounted) return;
+    setState(() {
+      _isCelebrating = false;
+      _isProcessing = false;
+    });
 
     Navigator.of(context).pushReplacementNamed(
       '/payment-success',
@@ -155,12 +441,18 @@ class _PaymentScreenState extends State<PaymentScreen> {
           ScreenSwitcherButton(),
         ],
       ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(AppSpacing.lg),
+      body: ConfettiOverlay(
+        isPlaying: _isCelebrating,
+        child: VietnamMapBackground(
+          opacity: 0.08,
+          child: Stack(
+            children: [
+              SafeArea(
+              child: Column(
+                children: [
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(AppSpacing.lg),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -402,15 +694,102 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 child: PrimaryButton(
                   text: 'Xác nhận thanh toán • ${_formatVnd(totalPrice)}',
                   isLoading: _isProcessing,
-                  trailingIcon: PhosphorIconsRegular.shieldCheck,
-                  onPressed: _confirmPayment,
+                  trailingIcon: PhosphorIconsRegular.qrCode,
+                  onPressed: () => _showPaymentQrModal(context, totalPrice, title),
                 ),
               ),
             ),
           ],
         ),
       ),
-    );
+      if (_isCelebrating)
+        Positioned.fill(
+          child: Container(
+            color: Colors.black.withValues(alpha: 0.45),
+            child: Center(
+              child: TweenAnimationBuilder<double>(
+                tween: Tween<double>(begin: 0.75, end: 1.0),
+                duration: const Duration(milliseconds: 350),
+                curve: Curves.elasticOut,
+                builder: (context, scale, child) {
+                  return Transform.scale(
+                    scale: scale,
+                    child: child,
+                  );
+                },
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+                  padding: const EdgeInsets.all(AppSpacing.xl),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(AppRadius.xl),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.success.withValues(alpha: 0.25),
+                        blurRadius: 28,
+                        spreadRadius: 4,
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 72,
+                        height: 72,
+                        decoration: BoxDecoration(
+                          color: AppColors.successLight,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: AppColors.success.withValues(alpha: 0.3),
+                            width: 2,
+                          ),
+                        ),
+                        child: const Center(
+                          child: PhosphorIcon(
+                            PhosphorIconsBold.check,
+                            size: 38,
+                            color: AppColors.success,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      Text(
+                        'Thanh toán thành công!',
+                        style: AppTypography.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        'Hệ thống đã nhận thanh toán.\nĐang phát hành mã QR vé cho bạn...',
+                        textAlign: TextAlign.center,
+                        style: AppTypography.textTheme.bodyMedium?.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+                      const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.5,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    ),
+  ),
+),
+);
   }
 
   Widget _summaryRow(String label, String value) {

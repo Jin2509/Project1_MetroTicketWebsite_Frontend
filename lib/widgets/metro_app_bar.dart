@@ -109,7 +109,7 @@ class MetroAppBar extends StatelessWidget implements PreferredSizeWidget {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color(0xFFEAF2FD),
+              Color(0xFF1E1730),
               AppColors.background,
             ],
           ),

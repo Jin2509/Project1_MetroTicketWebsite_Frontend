@@ -498,8 +498,9 @@ class _LiveMapScreenState extends State<LiveMapScreen>
                                           Container(
                                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                                             decoration: BoxDecoration(
-                                              color: const Color(0xFFF1F5F9),
+                                              color: AppColors.surfaceSecondary,
                                               borderRadius: BorderRadius.circular(AppRadius.sm),
+                                              border: Border.all(color: AppColors.borderSubtle),
                                             ),
                                             child: Text(
                                               station.interchangeNote!,
@@ -573,9 +574,9 @@ class _LiveMapScreenState extends State<LiveMapScreen>
     return Container(
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.90),
+        color: AppColors.surface.withValues(alpha: 0.92),
         borderRadius: BorderRadius.circular(AppRadius.pill),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.8)),
+        border: Border.all(color: AppColors.border),
         boxShadow: AppShadows.subtle,
       ),
       child: Row(
@@ -621,12 +622,12 @@ class _LiveMapScreenState extends State<LiveMapScreen>
         curve: Curves.easeInOut,
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.surface : Colors.transparent,
+          color: isSelected ? AppColors.primary : Colors.transparent,
           borderRadius: BorderRadius.circular(AppRadius.pill),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: const Color(0xFF1A1D29).withValues(alpha: 0.08),
+                    color: AppColors.primary.withValues(alpha: 0.35),
                     blurRadius: 6,
                     offset: const Offset(0, 2),
                   ),
@@ -639,7 +640,7 @@ class _LiveMapScreenState extends State<LiveMapScreen>
             PhosphorIcon(
               icon,
               size: 15,
-              color: isSelected ? AppColors.primary : AppColors.textSecondary,
+              color: isSelected ? Colors.white : AppColors.textSecondary,
             ),
             const SizedBox(width: 5),
             Text(
@@ -647,7 +648,7 @@ class _LiveMapScreenState extends State<LiveMapScreen>
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                color: isSelected ? AppColors.textPrimary : AppColors.textSecondary,
+                color: isSelected ? Colors.white : AppColors.textSecondary,
               ),
             ),
           ],
@@ -661,19 +662,20 @@ class _LiveMapScreenState extends State<LiveMapScreen>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.90),
+        color: AppColors.surface.withValues(alpha: 0.92),
         borderRadius: BorderRadius.circular(AppRadius.pill),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.8)),
+        border: Border.all(color: AppColors.border),
         boxShadow: AppShadows.subtle,
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: _selectedLineId,
           isDense: true,
+          dropdownColor: AppColors.surface,
           icon: const PhosphorIcon(
             PhosphorIconsRegular.caretDown,
             size: 13,
-            color: AppColors.textPrimary,
+            color: AppColors.textSecondary,
           ),
           items: const [
             DropdownMenuItem(
@@ -729,16 +731,16 @@ class _LiveMapScreenState extends State<LiveMapScreen>
       width: 42,
       height: 42,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface.withValues(alpha: 0.92),
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF1A1D29).withValues(alpha: 0.12),
+            color: Colors.black.withValues(alpha: 0.35),
             blurRadius: 10,
             offset: const Offset(0, 3),
           ),
         ],
-        border: Border.all(color: AppColors.borderSubtle),
+        border: Border.all(color: AppColors.border),
       ),
       child: Material(
         color: Colors.transparent,
@@ -835,14 +837,17 @@ class _LiveMapScreenState extends State<LiveMapScreen>
       builder: (context, scrollController) {
         return Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.surface,
             borderRadius: const BorderRadius.only(
               topLeft: Radius.circular(AppRadius.xl),
               topRight: Radius.circular(AppRadius.xl),
             ),
+            border: const Border(
+              top: BorderSide(color: AppColors.border, width: 1),
+            ),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF1A1D29).withValues(alpha: 0.12),
+                color: Colors.black.withValues(alpha: 0.4),
                 blurRadius: 24,
                 offset: const Offset(0, -6),
               ),
@@ -896,7 +901,7 @@ class _LiveMapScreenState extends State<LiveMapScreen>
                         Text(
                           'ĐANG THEO DÕI · $lineLabel',
                           style: AppTypography.textTheme.labelSmall?.copyWith(
-                            color: AppColors.primary,
+                            color: AppColors.primaryText,
                             fontWeight: FontWeight.w800,
                             letterSpacing: 0.6,
                             fontSize: 10,
@@ -928,11 +933,12 @@ class _LiveMapScreenState extends State<LiveMapScreen>
                         decoration: BoxDecoration(
                           color: AppColors.primaryLight,
                           borderRadius: BorderRadius.circular(AppRadius.pill),
+                          border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
                         ),
                         child: Text(
                           _selectedLineId == 'line_1' ? 'Ga 3/14' : 'Ga 2/11',
                           style: const TextStyle(
-                            color: AppColors.primary,
+                            color: AppColors.primaryText,
                             fontWeight: FontWeight.w700,
                             fontSize: 11,
                           ),
@@ -975,7 +981,7 @@ class _LiveMapScreenState extends State<LiveMapScreen>
                   child: MetroCard(
                     onTap: () => _panToTrain(train),
                     backgroundColor:
-                        isSelected ? AppColors.primaryLight : AppColors.surface,
+                        isSelected ? AppColors.primary.withValues(alpha: 0.2) : AppColors.surfaceSecondary,
                     border: Border.all(
                       color: isSelected
                           ? AppColors.primary

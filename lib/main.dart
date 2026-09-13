@@ -12,6 +12,7 @@ import 'screens/booking/payment_screen.dart';
 import 'screens/booking/payment_success_screen.dart';
 import 'screens/main_shell.dart';
 import 'screens/map/live_map_screen.dart';
+import 'screens/map/search_map_screen.dart';
 import 'screens/news/article_detail_screen.dart';
 import 'screens/news/news_feed_screen.dart';
 import 'screens/notifications/notifications_screen.dart';
@@ -56,10 +57,10 @@ class MetroGoApp extends StatelessWidget {
         '/signup': (context) => const SignupScreen(),
         '/main': (context) => const MainShell(initialTab: 0),
         '/search': (context) => const SearchScreen(),
+        '/search-map': (context) => const SearchMapScreen(showBackButton: true),
         '/my-tickets': (context) => const MyTicketsScreen(),
-        '/profile': (context) => const MainShell(initialTab: 4),
+        '/profile': (context) => const MainShell(initialTab: 3),
         '/edit-profile': (context) => const EditProfileScreen(),
-        '/booking': (context) => const BookingFlowScreen(),
         '/schedule-lookup': (context) => const ScheduleLookupScreen(),
         '/fare-table': (context) => const FareTableScreen(),
         '/route-detail': (context) => RouteDetailScreen(line: TransitData.lines[0]),
@@ -69,6 +70,13 @@ class MetroGoApp extends StatelessWidget {
         '/news': (context) => const NewsFeedScreen(),
       },
       onGenerateRoute: (settings) {
+        if (settings.name == '/booking') {
+          final ticketType =
+              settings.arguments as TicketType? ?? TicketType.singleRide;
+          return MaterialPageRoute(
+            builder: (context) => BookingFlowScreen(initialType: ticketType),
+          );
+        }
         if (settings.name == '/article-detail') {
           final article =
               settings.arguments as NewsArticle? ?? NewsData.articles.first;

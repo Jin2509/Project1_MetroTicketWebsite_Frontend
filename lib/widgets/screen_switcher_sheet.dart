@@ -120,7 +120,13 @@ class ScreenSwitcherSheet extends StatelessWidget {
       icon: PhosphorIconsRegular.currencyCircleDollar,
     ),
     ScreenOption(
-      title: '17. Bản đồ theo dõi tàu trực tiếp',
+      title: '17. Tra cứu & Bản đồ (Gộp mới)',
+      description: 'Thanh tìm kiếm ở trên, bản đồ ở giữa và danh sách các ga ở dưới',
+      routeName: '/search-map',
+      icon: PhosphorIconsRegular.mapTrifold,
+    ),
+    ScreenOption(
+      title: '18. Bản đồ theo dõi tàu trực tiếp',
       description: 'Bản đồ OpenStreetMap full-screen, tàu chuyển động & bảng thông tin',
       routeName: '/live-map',
       icon: PhosphorIconsRegular.navigationArrow,
