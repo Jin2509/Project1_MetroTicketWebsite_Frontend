@@ -1,72 +1,72 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// App color palette designed for MetroGo - Proton Dark Theme:
-/// Deep obsidian night background, Proton vibrant violet primary,
-/// electric mint accents, elegant lavender text and dark purple-gray surfaces.
+/// App color palette designed for MetroGo - Modern Metro Light Theme:
+/// Crisp white & soft warm pastel orange/cream surfaces, energetic tangerine-orange primary,
+/// high-contrast deep slate typography, and clean pastel utility accents.
 class AppColors {
-  // Primary brand Proton Violet/Purple
-  static const Color primary = Color(0xFF6D4AFF);
-  static const Color primaryLight = Color(0xFF2C2250);
-  static const Color primarySubtle = Color(0xFF1E1736);
-  static const Color primaryDark = Color(0xFF5636D6);
-  static const Color primaryGradientStart = Color(0xFF7A57FF);
-  static const Color primaryGradientEnd = Color(0xFF5D3BE8);
+  // Primary brand Metro Orange / Coral Tangerine
+  static const Color primary = Color(0xFFFF7A45);
+  static const Color primaryLight = Color(0xFFFFF0E6); // Soft warm peach/cream
+  static const Color primarySubtle = Color(0xFFFFF7F2); // Ultra-light cream tint
+  static const Color primaryDark = Color(0xFFE85924);
+  static const Color primaryGradientStart = Color(0xFFFF8A5C);
+  static const Color primaryGradientEnd = Color(0xFFFF6231);
 
-  // Backgrounds and surfaces (Proton Obsidian Dark)
-  static const Color background = Color(0xFF13111C);
-  static const Color backgroundGradientStart = Color(0xFF1A1526);
-  static const Color backgroundGradientEnd = Color(0xFF0F0E16);
-  static const Color surface = Color(0xFF1E1A2B);
-  static const Color surfaceSecondary = Color(0xFF272238);
-  static const Color surfaceMuted = Color(0xFF2F2944);
+  // Backgrounds and surfaces (Clean White & Soft Warm Cream)
+  static const Color background = Color(0xFFFAF9F6);
+  static const Color backgroundGradientStart = Color(0xFFFFFFFF);
+  static const Color backgroundGradientEnd = Color(0xFFF6F3EE);
+  static const Color surface = Color(0xFFFFFFFF);
+  static const Color surfaceSecondary = Color(0xFFF7F5F2);
+  static const Color surfaceMuted = Color(0xFFEFECE6);
 
-  // Text colors (Crisp white and soft lavender on dark)
-  static const Color textPrimary = Color(0xFFFFFFFF);
-  static const Color textSecondary = Color(0xFFCECAE3);
-  static const Color textMuted = Color(0xFF9E97B8);
+  // Text colors (High contrast deep slate dark for maximum readability)
+  static const Color textPrimary = Color(0xFF1E293B);
+  static const Color textSecondary = Color(0xFF64748B);
+  static const Color textMuted = Color(0xFF94A3B8);
   static const Color textOnPrimary = Color(0xFFFFFFFF);
-  static const Color primaryText = Color(0xFFB59DFF);
+  static const Color primaryText = Color(0xFFE05626);
 
   // Borders and dividers
-  static const Color border = Color(0xFF312948);
-  static const Color borderSubtle = Color(0xFF262038);
-  static const Color borderMedium = Color(0xFF453B64);
-  static const Color borderFocused = Color(0xFF6D4AFF);
+  static const Color border = Color(0xFFE2E8F0);
+  static const Color borderSubtle = Color(0xFFF1EFEA);
+  static const Color borderMedium = Color(0xFFCBD5E1);
+  static const Color borderFocused = Color(0xFFFF7A45);
 
   // Semantic & status colors
-  static const Color success = Color(0xFF00D492); // Proton Electric Mint
-  static const Color successLight = Color(0xFF003827);
-  static const Color successText = Color(0xFF00E59E);
+  static const Color success = Color(0xFF10B981); // Emerald / Mint Green
+  static const Color successLight = Color(0xFFECFDF5);
+  static const Color successText = Color(0xFF059669);
 
-  static const Color warning = Color(0xFFFFA928);
-  static const Color warningLight = Color(0xFF3B2606);
-  static const Color warningText = Color(0xFFFFB74D);
+  static const Color warning = Color(0xFFF59E0B);
+  static const Color warningLight = Color(0xFFFFFBEB);
+  static const Color warningText = Color(0xFFD97706);
 
-  static const Color error = Color(0xFFFF453A);
-  static const Color errorLight = Color(0xFF3A1211);
-  static const Color errorText = Color(0xFFFF6961);
+  static const Color error = Color(0xFFEF4444);
+  static const Color errorLight = Color(0xFFFEF2F2);
+  static const Color errorText = Color(0xFFDC2626);
 
-  static const Color info = Color(0xFF38BDF8);
-  static const Color infoLight = Color(0xFF132F4C);
-  static const Color infoText = Color(0xFF7DD3FC);
+  static const Color info = Color(0xFF0EA5E9);
+  static const Color infoLight = Color(0xFFF0F9FF);
+  static const Color infoText = Color(0xFF0284C7);
 
   // Ticket Status Colors
-  static const Color ticketPaid = Color(0xFF00D492);
-  static const Color ticketPaidBg = Color(0xFF003827);
-  static const Color ticketPaidText = Color(0xFF00E59E);
+  static const Color ticketPaid = Color(0xFF10B981);
+  static const Color ticketPaidBg = Color(0xFFECFDF5);
+  static const Color ticketPaidText = Color(0xFF059669);
 
-  static const Color ticketPending = Color(0xFFFFA928);
-  static const Color ticketPendingBg = Color(0xFF3B2606);
-  static const Color ticketPendingText = Color(0xFFFFB74D);
+  static const Color ticketPending = Color(0xFFF59E0B);
+  static const Color ticketPendingBg = Color(0xFFFFFBEB);
+  static const Color ticketPendingText = Color(0xFFD97706);
 
-  static const Color ticketUsed = Color(0xFF6D4AFF);
-  static const Color ticketUsedBg = Color(0xFF2C2250);
-  static const Color ticketUsedText = Color(0xFF9D84FF);
+  static const Color ticketUsed = Color(0xFFFF7A45);
+  static const Color ticketUsedBg = Color(0xFFFFF0E6);
+  static const Color ticketUsedText = Color(0xFFE05626);
 
-  static const Color ticketExpired = Color(0xFF64748B);
-  static const Color ticketExpiredBg = Color(0xFF1E1C27);
-  static const Color ticketExpiredText = Color(0xFF8F9CAE);
+  static const Color ticketExpired = Color(0xFF94A3B8);
+  static const Color ticketExpiredBg = Color(0xFFF1F5F9);
+  static const Color ticketExpiredText = Color(0xFF64748B);
 }
 
 /// Spacing scale (4px grid)
@@ -112,40 +112,39 @@ class AppRadius {
   static const BorderRadius borderPill = BorderRadius.all(rPill);
 }
 
-/// Soft, subtle shadows — never harsh or heavy
-/// Soft, subtle shadows configured for Proton Dark Theme
+/// Soft, subtle shadows configured for Metro Light Theme
 class AppShadows {
   static const List<BoxShadow> subtle = [
     BoxShadow(
-      color: Color(0x25000000),
-      blurRadius: 14,
-      offset: Offset(0, 4),
+      color: Color(0x0A000000),
+      blurRadius: 8,
+      offset: Offset(0, 2),
       spreadRadius: 0,
     ),
   ];
 
   static const List<BoxShadow> card = [
     BoxShadow(
-      color: Color(0x30000000),
-      blurRadius: 18,
-      offset: Offset(0, 4),
+      color: Color(0x0C000000),
+      blurRadius: 14,
+      offset: Offset(0, 3),
       spreadRadius: 0,
     ),
   ];
 
   static const List<BoxShadow> floating = [
     BoxShadow(
-      color: Color(0x45000000),
-      blurRadius: 24,
-      offset: Offset(0, 8),
+      color: Color(0x14000000),
+      blurRadius: 20,
+      offset: Offset(0, 6),
       spreadRadius: 0,
     ),
   ];
 
   static const List<BoxShadow> buttonPrimary = [
     BoxShadow(
-      color: Color(0x406D4AFF),
-      blurRadius: 18,
+      color: Color(0x33FF7A45),
+      blurRadius: 16,
       offset: Offset(0, 6),
       spreadRadius: 0,
     ),
@@ -267,25 +266,23 @@ class AppTypography {
   static TextStyle get caption => textTheme.bodySmall!;
 }
 
-/// Flutter ThemeData configured for MetroGo - Proton Dark Theme
+/// Flutter ThemeData configured for MetroGo - Modern Metro Light Theme
 class AppTheme {
-  static ThemeData get lightTheme => darkTheme;
-
-  static ThemeData get darkTheme {
+  static ThemeData get lightTheme {
     final baseTextTheme = AppTypography.textTheme;
 
     return ThemeData(
       useMaterial3: true,
-      brightness: Brightness.dark,
+      brightness: Brightness.light,
       primaryColor: AppColors.primary,
       scaffoldBackgroundColor: AppColors.background,
       fontFamily: GoogleFonts.merriweather().fontFamily,
       fontFamilyFallback: AppTypography.fontFallback,
-      colorScheme: const ColorScheme.dark(
+      colorScheme: const ColorScheme.light(
         primary: AppColors.primary,
         onPrimary: AppColors.textOnPrimary,
         primaryContainer: AppColors.primaryLight,
-        onPrimaryContainer: AppColors.primary,
+        onPrimaryContainer: AppColors.primaryDark,
         surface: AppColors.surface,
         onSurface: AppColors.textPrimary,
         error: AppColors.error,
@@ -357,4 +354,6 @@ class AppTheme {
       ),
     );
   }
+
+  static ThemeData get darkTheme => lightTheme;
 }

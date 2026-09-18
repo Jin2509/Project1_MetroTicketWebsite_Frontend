@@ -7,6 +7,7 @@ import '../../widgets/metro_card.dart';
 import '../../widgets/metro_ticket_card.dart';
 import '../../widgets/primary_button.dart';
 import '../../widgets/screen_switcher_sheet.dart';
+import '../../widgets/secondary_button.dart';
 import '../../widgets/status_badge.dart';
 import '../../widgets/vietnam_map_background.dart';
 import 'history_filter_sheet.dart';
@@ -380,7 +381,23 @@ class _MyTicketsScreenState extends State<MyTicketsScreen>
           text: 'Đặt vé mới ngay',
           leadingIcon: PhosphorIconsRegular.ticket,
           trailingIcon: PhosphorIconsRegular.arrowRight,
-          onPressed: () => Navigator.of(context).pushNamed('/booking'),
+          onPressed: () => Navigator.of(context).pushNamed(
+            '/booking',
+            arguments: {'mode': 'ticket'},
+          ),
+        ),
+
+        const SizedBox(height: AppSpacing.sm),
+
+        // Parallel Dedicated Button "Đăng ký giữ xe tại ga"
+        SecondaryButton(
+          text: 'Đăng ký giữ xe tại ga',
+          leadingIcon: PhosphorIconsRegular.car,
+          trailingIcon: PhosphorIconsRegular.arrowRight,
+          onPressed: () => Navigator.of(context).pushNamed(
+            '/booking',
+            arguments: {'mode': 'parking'},
+          ),
         ),
 
         const SizedBox(height: AppSpacing.xl),

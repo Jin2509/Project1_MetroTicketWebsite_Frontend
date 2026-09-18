@@ -6,6 +6,7 @@ import 'package:metro_go/models/news_model.dart';
 import 'package:metro_go/models/ticket_model.dart';
 import 'package:metro_go/screens/ai/ai_assistant_screen.dart';
 import 'package:metro_go/screens/ai/compact_ai_chat_sheet.dart';
+import 'package:metro_go/screens/auth/login_screen.dart';
 import 'package:metro_go/screens/booking/booking_flow_screen.dart';
 import 'package:metro_go/screens/booking/payment_screen.dart';
 import 'package:metro_go/screens/booking/payment_success_screen.dart';
@@ -25,16 +26,15 @@ import 'package:metro_go/widgets/status_badge.dart';
 import 'package:metro_go/widgets/vietnam_map_background.dart';
 
 void main() {
-  testWidgets('MetroGo smoke test - renders splash screen', (WidgetTester tester) async {
+  testWidgets('MetroGo smoke test - renders login screen directly', (WidgetTester tester) async {
     await tester.pumpWidget(const MetroGoApp());
     await tester.pump();
 
-    // Verify brand text is displayed on Splash
-    expect(find.byType(RichText), findsWidgets);
-    expect(find.text('Di chuyển đô thị thông minh'), findsOneWidget);
-
-    // Advance past splash delayed navigation timer
-    await tester.pump(const Duration(seconds: 3));
+    // Verify app opens directly to Login Screen (no splash delays or onboarding steps)
+    expect(find.text('Đăng nhập với Số điện thoại'), findsOneWidget);
+    expect(find.text('Google'), findsOneWidget);
+    expect(find.text('Facebook'), findsOneWidget);
+    expect(find.text('Khám phá ngay (Không cần đăng nhập)'), findsOneWidget);
   });
 
   testWidgets('StatusBadge displays correct labels', (WidgetTester tester) async {
@@ -197,13 +197,14 @@ void main() {
     expect(find.text('Vé hiệu lực'), findsOneWidget);
     expect(find.text('Mã QR lên tàu'), findsWidgets);
 
-    // 2. Quick 7 Shortcuts Cluster (In exact requested order)
+    // 2. Quick Shortcuts Cluster (Balanced 4x2 grid of 8 equal items)
     expect(find.text('Đặt vé'), findsOneWidget);
     expect(find.text('Kiểm tra vé'), findsOneWidget);
     expect(find.text('Tra cứu map'), findsOneWidget);
     expect(find.text('Tra cứu ga'), findsOneWidget);
     expect(find.text('Tiện ích quanh ga'), findsOneWidget);
-    expect(find.text('Chatbot'), findsOneWidget);
+    expect(find.text('Lịch chạy tàu'), findsOneWidget);
+    expect(find.text('Chatbot AI'), findsOneWidget);
     expect(find.text('Check-in'), findsOneWidget);
 
     // 3. Quick Route Card & News Section (Film app style)
@@ -368,6 +369,7 @@ void main() {
     expect(find.text('Vé ngày (Day Pass)'), findsOneWidget);
     expect(find.text('Vé tháng (Monthly Pass)'), findsOneWidget);
     expect(find.text('Đặt vé mới ngay'), findsOneWidget);
+    expect(find.text('Đăng ký giữ xe tại ga'), findsOneWidget);
   });
 
   testWidgets('PaymentScreen opens payment QR modal and shows celebration on completion', (WidgetTester tester) async {
@@ -423,16 +425,44 @@ void main() {
     await tester.pump(const Duration(seconds: 3));
   });
 
-  test('Proton Dark Theme colors and tokens are correctly defined', () {
-    expect(AppColors.primary, const Color(0xFF6D4AFF));
-    expect(AppColors.background, const Color(0xFF13111C));
-    expect(AppColors.surface, const Color(0xFF1E1A2B));
-    expect(AppColors.surfaceSecondary, const Color(0xFF272238));
-    expect(AppColors.textPrimary, const Color(0xFFFFFFFF));
-    expect(AppColors.textSecondary, const Color(0xFFCECAE3));
-    expect(AppColors.primaryText, const Color(0xFFB59DFF));
-    expect(AppColors.success, const Color(0xFF00D492));
-    expect(AppTheme.darkTheme.brightness, Brightness.dark);
+  test('Metro Light Theme colors and tokens are correctly defined', () {
+    expect(AppColors.primary, const Color(0xFFFF7A45));
+    expect(AppColors.primaryLight, const Color(0xFFFFF0E6));
+    expect(AppColors.background, const Color(0xFFFAF9F6));
+    expect(AppColors.surface, const Color(0xFFFFFFFF));
+    expect(AppColors.surfaceSecondary, const Color(0xFFF7F5F2));
+    expect(AppColors.textPrimary, const Color(0xFF1E293B));
+    expect(AppColors.textSecondary, const Color(0xFF64748B));
+    expect(AppTheme.lightTheme.brightness, Brightness.light);
+  });
+
+  testWidgets('LoginScreen displays phone input and Google/Facebook login buttons', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: LoginScreen(),
+      ),
+    );
+    await tester.pump();
+
+    // 1. Brand header
+    expect(find.text('ĐƯỜNG SẮT ĐÔ THỊ TP. HỒ CHÍ MINH'), findsOneWidget);
+
+    // 2. Phone and password inputs
+    expect(find.text('Số điện thoại'), findsOneWidget);
+    expect(find.text('+84'), findsOneWidget);
+    expect(find.text('Mật khẩu'), findsOneWidget);
+    expect(find.text('Đăng nhập bằng mã OTP qua SMS'), findsOneWidget);
+
+    // 3. Phone login button
+    expect(find.text('Đăng nhập với Số điện thoại'), findsOneWidget);
+
+    // 4. Social login buttons: Google & Facebook
+    expect(find.text('HOẶC TIẾP TỤC VỚI'), findsOneWidget);
+    expect(find.text('Google'), findsOneWidget);
+    expect(find.text('Facebook'), findsOneWidget);
+
+    // 5. Guest explore button
+    expect(find.text('Khám phá ngay (Không cần đăng nhập)'), findsOneWidget);
   });
 
   testWidgets('VietnamMapBackground renders child and custom paint canvas', (WidgetTester tester) async {
@@ -542,8 +572,8 @@ void main() {
     expect(booking.station, 'Bến Thành');
   });
 
-  testWidgets('BookingFlowScreen toggles parking reservation and calculates fees', (WidgetTester tester) async {
-    tester.view.physicalSize = const Size(800, 1600);
+  testWidgets('BookingFlowScreen displays 2 parallel buttons at top and switches between ticket and parking modes', (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(800, 2400);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
 
@@ -554,20 +584,27 @@ void main() {
     );
     await tester.pump();
 
-    // Verify parking section toggle is displayed
+    // 1. Verify 2 parallel mode buttons are displayed at the top above ticket types
+    expect(find.text('Đặt vé tàu Metro'), findsOneWidget);
+    expect(find.text('Đăng ký giữ xe ga'), findsOneWidget);
+
+    // Initially in Ticket mode: Ticket types are visible, parking form is not
+    expect(find.text('CHỌN LOẠI VÉ'), findsOneWidget);
+    expect(find.text('Vé lượt'), findsOneWidget);
+    expect(find.text('Họ tên chủ xe'), findsNothing);
+
+    // 2. Tap parallel button "Đăng ký giữ xe ga" to switch to parking reservation mode
+    await tester.tap(find.text('Đăng ký giữ xe ga'));
+    await tester.pumpAndSettle();
+
+    // Ticket types are now hidden (parallel, no overlap)
+    expect(find.text('CHỌN LOẠI VÉ'), findsNothing);
+
+    // Verify parking section is now displayed
     expect(find.text('ĐẶT CHỖ GIỮ XE TẠI GA'), findsOneWidget);
     expect(find.textContaining('Bảo đảm có chỗ đỗ xe tại nhà ga'), findsOneWidget);
 
-    // Initially inputs are hidden
-    expect(find.text('Họ tên chủ xe'), findsNothing);
-
-    // Toggle parking switch on
-    final switchFinder = find.byType(Switch);
-    expect(switchFinder, findsOneWidget);
-    await tester.tap(switchFinder);
-    await tester.pumpAndSettle();
-
-    // Verify fields are now visible
+    // Verify parking form fields are visible
     expect(find.text('Họ tên chủ xe'), findsOneWidget);
     expect(find.text('Biển số xe'), findsOneWidget);
     expect(find.text('Loại phương tiện'), findsOneWidget);
@@ -579,12 +616,56 @@ void main() {
     expect(find.text('Qua đêm'), findsOneWidget);
     expect(find.text('Số tiền giữ xe (1 buổi)'), findsOneWidget);
     expect(find.text('5.000 đ'), findsWidgets);
+    expect(find.text('Thanh toán giữ xe (QR)'), findsOneWidget);
 
     // Select '1 ngày' package
     await tester.tap(find.text('1 ngày'));
     await tester.pumpAndSettle();
     expect(find.text('Số tiền giữ xe (1 ngày)'), findsOneWidget);
     expect(find.text('10.000 đ'), findsWidgets);
+
+    // 3. Switch back to Ticket mode
+    await tester.tap(find.text('Đặt vé tàu Metro'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('CHỌN LOẠI VÉ'), findsOneWidget);
+    expect(find.text('Họ tên chủ xe'), findsNothing);
+    expect(find.text('Tiếp tục thanh toán (QR)'), findsOneWidget);
+  });
+
+  testWidgets('BookingFlowScreen displays bus connections and station destinations', (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(800, 3000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: BookingFlowScreen(),
+      ),
+    );
+    await tester.pump();
+
+    // 1. Verify Metro ticket subtotal
+    expect(find.text('Tiền vé tàu Metro (1 vé)'), findsOneWidget);
+
+    // 2. Verify Section Divider
+    expect(find.text('DỊCH VỤ TẠI NHÀ GA'), findsOneWidget);
+
+    // 3. Verify Bus Connections Section
+    expect(find.text('LIÊN KẾT XE BUÝT TRUNG CHUYỂN'), findsOneWidget);
+    expect(find.textContaining('tuyến buýt'), findsOneWidget);
+    expect(find.text('Tại Ga đi: Bến Thành'), findsOneWidget);
+    expect(find.text('Tại Ga đến: Suối Tiên'), findsOneWidget);
+
+    // Toggle to arrival station (Suối Tiên)
+    await tester.tap(find.text('Tại Ga đến: Suối Tiên'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Tuyến 150'), findsOneWidget);
+
+    // 4. Verify Station Destinations Section
+    expect(find.text('ĐIỂM ĐẾN & KHU VỰC GIẢI TRÍ QUANH GA'), findsOneWidget);
+    expect(find.text('Quanh Ga đến: Suối Tiên'), findsOneWidget);
+    expect(find.textContaining('Khu Du Lịch Văn Hóa Suối Tiên'), findsOneWidget);
   });
 
   testWidgets('PaymentScreen displays parking reservation itemization in order summary', (WidgetTester tester) async {
@@ -703,6 +784,28 @@ void main() {
     await tester.pump();
 
     expect(find.textContaining('Giữ xe: Ga Bến Thành (59-B1 777.77)'), findsOneWidget);
+  });
+
+  testWidgets('BookingFlowScreen initialized with BookingPageMode.parking opens parking reservation directly', (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(800, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: BookingFlowScreen(initialMode: BookingPageMode.parking),
+      ),
+    );
+    await tester.pump();
+
+    // Verify parking mode is active immediately
+    expect(find.text('ĐẶT CHỖ GIỮ XE TẠI GA'), findsOneWidget);
+    expect(find.text('Họ tên chủ xe'), findsOneWidget);
+    expect(find.text('Biển số xe'), findsOneWidget);
+    expect(find.text('Thanh toán giữ xe (QR)'), findsOneWidget);
+
+    // Ticket types are not shown
+    expect(find.text('CHỌN LOẠI VÉ'), findsNothing);
   });
 }
 

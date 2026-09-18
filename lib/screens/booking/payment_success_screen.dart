@@ -269,11 +269,43 @@ class PaymentSuccessScreen extends StatelessWidget {
                                 const SizedBox(width: 6),
                                 Expanded(
                                   child: Text(
-                                    'Vui lòng xuất trình biển số xe và mã vé này cho nhân viên khi gửi/lấy xe tại ga.',
+                                    'Vui lòng xuất trình mã QR giữ xe này hoặc biển số xe khi vào/ra bãi giữ xe tại ga.',
                                     style: AppTypography.textTheme.bodySmall?.copyWith(
                                       fontSize: 11,
                                       color: AppColors.textSecondary,
                                     ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          // Parking Access QR Code
+                          Center(
+                            child: Column(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(AppRadius.lg),
+                                    border: Border.all(color: AppColors.borderSubtle),
+                                    boxShadow: AppShadows.subtle,
+                                  ),
+                                  child: QrImageView(
+                                    data: 'METRO:PARK:${ticket.parking!.station}:${ticket.parking!.licensePlate}:${ticket.id}',
+                                    version: QrVersions.auto,
+                                    size: 130.0,
+                                    padding: EdgeInsets.zero,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  'MÃ QR VÀO/RA BÃI GIỮ XE (Quét tại barie bãi đỗ)',
+                                  style: AppTypography.textTheme.labelSmall?.copyWith(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.primary,
                                   ),
                                 ),
                               ],
