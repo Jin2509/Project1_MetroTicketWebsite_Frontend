@@ -55,19 +55,19 @@ class MetroBottomNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFF151220),
-        border: const Border(
+      decoration: const BoxDecoration(
+        color: AppColors.surface,
+        border: Border(
           top: BorderSide(
-            color: Color(0xFF262038),
+            color: AppColors.borderSubtle,
             width: 1.0,
           ),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.35),
-            blurRadius: 20,
-            offset: const Offset(0, -4),
+            color: Color(0x0A000000),
+            blurRadius: 16,
+            offset: Offset(0, -4),
           ),
         ],
       ),
@@ -104,14 +104,14 @@ class MetroBottomNav extends StatelessWidget {
                           ),
                           decoration: BoxDecoration(
                             color: isSelected
-                                ? AppColors.primary
+                                ? AppColors.primaryLight
                                 : Colors.transparent,
                             borderRadius: BorderRadius.circular(AppRadius.pill),
                             boxShadow: isSelected
                                 ? [
                                     BoxShadow(
-                                      color: AppColors.primary.withValues(alpha: 0.4),
-                                      blurRadius: 10,
+                                      color: AppColors.primary.withValues(alpha: 0.15),
+                                      blurRadius: 8,
                                       offset: const Offset(0, 2),
                                     ),
                                   ]
@@ -121,7 +121,7 @@ class MetroBottomNav extends StatelessWidget {
                             isSelected ? item.activeIcon : item.regularIcon,
                             size: 20,
                             color: isSelected
-                                ? Colors.white
+                                ? AppColors.primary
                                 : AppColors.textSecondary,
                           ),
                         ),
@@ -133,9 +133,9 @@ class MetroBottomNav extends StatelessWidget {
                           style: AppTypography.textTheme.labelSmall?.copyWith(
                             fontSize: 11,
                             fontWeight:
-                                isSelected ? FontWeight.w700 : FontWeight.w500,
+                                isSelected ? FontWeight.w800 : FontWeight.w500,
                             color: isSelected
-                                ? Colors.white
+                                ? AppColors.primary
                                 : AppColors.textSecondary,
                           ),
                         ),

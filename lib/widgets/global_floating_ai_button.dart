@@ -86,20 +86,20 @@ class _GlobalFloatingAiButtonState extends State<GlobalFloatingAiButton>
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    Color(0xFF8662FF), // Proton Electric Violet
-                    Color(0xFF6D4AFF), // Proton Primary Purple
+                    AppColors.primaryGradientStart,
+                    AppColors.primaryGradientEnd,
                   ],
                 ),
                 border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.25),
+                  color: Colors.white.withValues(alpha: 0.35),
                   width: 1.5,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF6D4AFF).withValues(alpha: 0.55),
+                    color: AppColors.primary.withValues(alpha: 0.40),
                     blurRadius: 18,
                     offset: const Offset(0, 6),
-                    spreadRadius: 2,
+                    spreadRadius: 1,
                   ),
                 ],
               ),
@@ -123,7 +123,7 @@ class _GlobalFloatingAiButtonState extends State<GlobalFloatingAiButton>
                         color: AppColors.success,
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: const Color(0xFF13111C),
+                          color: Colors.white,
                           width: 2.2,
                         ),
                       ),

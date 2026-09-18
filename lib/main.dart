@@ -49,7 +49,7 @@ class MetroGoApp extends StatelessWidget {
       title: 'MetroGo',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      initialRoute: '/splash',
+      initialRoute: '/login',
       routes: {
         '/splash': (context) => const SplashScreen(),
         '/onboarding': (context) => const OnboardingScreen(),
@@ -71,10 +71,33 @@ class MetroGoApp extends StatelessWidget {
       },
       onGenerateRoute: (settings) {
         if (settings.name == '/booking') {
-          final ticketType =
-              settings.arguments as TicketType? ?? TicketType.singleRide;
+          TicketType initialTicketType = TicketType.singleRide;
+          BookingPageMode initialMode = BookingPageMode.ticket;
+
+          final args = settings.arguments;
+          if (args is BookingPageMode) {
+            initialMode = args;
+          } else if (args is TicketType) {
+            initialTicketType = args;
+            initialMode = BookingPageMode.ticket;
+          } else if (args is Map) {
+            if (args['mode'] == 'parking') {
+              initialMode = BookingPageMode.parking;
+            } else if (args['mode'] == 'ticket') {
+              initialMode = BookingPageMode.ticket;
+            }
+            if (args['ticketType'] is TicketType) {
+              initialTicketType = args['ticketType'] as TicketType;
+            }
+          } else if (args == 'parking') {
+            initialMode = BookingPageMode.parking;
+          }
+
           return MaterialPageRoute(
-            builder: (context) => BookingFlowScreen(initialType: ticketType),
+            builder: (context) => BookingFlowScreen(
+              initialType: initialTicketType,
+              initialMode: initialMode,
+            ),
           );
         }
         if (settings.name == '/article-detail') {

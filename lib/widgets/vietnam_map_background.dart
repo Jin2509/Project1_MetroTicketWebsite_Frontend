@@ -26,17 +26,17 @@ class VietnamMapBackground extends StatelessWidget {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            Color(0xFF1C162B), // Deep Proton Dusk Purple
-            Color(0xFF13111C), // Obsidian Dark Base
-            Color(0xFF0D0C13), // Deep Charcoal Bottom
+            Color(0xFFFFFFFF), // Crisp White top
+            Color(0xFFFFF9F5), // Soft pastel peach/cream
+            Color(0xFFF6F2EB), // Warm light base
           ],
-          stops: [0.0, 0.45, 1.0],
+          stops: [0.0, 0.5, 1.0],
         ),
       ),
       child: Stack(
         fit: StackFit.expand,
         children: [
-          // Static White Line-Art Vietnam Map Canvas (no blinking)
+          // Static Pastel Line-Art Vietnam Map Canvas (no blinking)
           CustomPaint(
             painter: VietnamMapPainter(
               opacity: opacity,
@@ -65,19 +65,19 @@ class VietnamMapPainter extends CustomPainter {
     if (size.width <= 0 || size.height <= 0) return;
 
     final linePaint = Paint()
-      ..color = Colors.white.withValues(alpha: opacity)
+      ..color = const Color(0xFFFF7A45).withValues(alpha: opacity * 1.5)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.35
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
 
     final secondaryLinePaint = Paint()
-      ..color = Colors.white.withValues(alpha: opacity * 0.55)
+      ..color = const Color(0xFFFF7A45).withValues(alpha: opacity * 0.9)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 0.95;
 
     final fillPaint = Paint()
-      ..color = Colors.white.withValues(alpha: opacity * 0.12)
+      ..color = const Color(0xFFFF7A45).withValues(alpha: opacity * 0.15)
       ..style = PaintingStyle.fill;
 
     // Normalize coordinates mapped to canvas size

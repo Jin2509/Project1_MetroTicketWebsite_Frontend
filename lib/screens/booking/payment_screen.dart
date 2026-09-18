@@ -243,6 +243,32 @@ class _PaymentScreenState extends State<PaymentScreen> {
                           color: AppColors.textSecondary,
                         ),
                       ),
+                      if (widget.bookingData['hasParking'] == true) ...[
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: AppColors.primaryLight,
+                            borderRadius: BorderRadius.circular(AppRadius.pill),
+                            border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const PhosphorIcon(PhosphorIconsBold.car, size: 13, color: AppColors.primary),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Mã QR thanh toán vé tàu + giữ xe Ga ${widget.bookingData['parkingStation'] ?? ""}',
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -385,7 +411,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
     // Generate unique Ticket ID
     final randomId = 'MG-L1-2026-${Random().nextInt(8999) + 1000}';
-    final ticketType = widget.bookingData['ticketType'] as TicketType;
+    final ticketType =
+        widget.bookingData['ticketType'] as TicketType? ?? TicketType.singleRide;
     final title = widget.bookingData['title'] as String;
     final origin = widget.bookingData['origin'] as String?;
     final destination = widget.bookingData['destination'] as String?;
@@ -456,7 +483,11 @@ class _PaymentScreenState extends State<PaymentScreen> {
     final parkingVehicle = widget.bookingData['parkingVehicle'] as String? ?? 'Xe máy';
     final parkingPackage = widget.bookingData['parkingPackage'] as String? ?? '1 buổi';
     final parkingFee = widget.bookingData['parkingFee'] as int? ?? 0;
-    final ticketTotal = widget.bookingData['ticketTotal'] as int? ?? (totalPrice - parkingFee);
+    final ticketTotal =
+        widget.bookingData['ticketTotal'] as int? ?? (totalPrice - parkingFee);
+    final bool isParkingOnly =
+        (widget.bookingData['isParkingOnly'] as bool? ?? false) ||
+        (ticketTotal == 0 && hasParking);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -506,8 +537,10 @@ class _PaymentScreenState extends State<PaymentScreen> {
                                   color: AppColors.primaryLight,
                                   borderRadius: BorderRadius.circular(AppRadius.md),
                                 ),
-                                child: const PhosphorIcon(
-                                  PhosphorIconsRegular.ticket,
+                                child: PhosphorIcon(
+                                  isParkingOnly
+                                      ? PhosphorIconsRegular.car
+                                      : PhosphorIconsRegular.ticket,
                                   color: AppColors.primary,
                                   size: 24,
                                 ),
@@ -544,13 +577,17 @@ class _PaymentScreenState extends State<PaymentScreen> {
                             child: Divider(height: 1),
                           ),
                           // Line items
-                          _summaryRow('Số lượng vé', '$quantity vé'),
-                          const SizedBox(height: AppSpacing.xs),
-                          _summaryRow('Tiền vé Metro', _formatVnd(ticketTotal)),
+                          if (!isParkingOnly) ...[
+                            _summaryRow('Số lượng vé', '$quantity vé'),
+                            const SizedBox(height: AppSpacing.xs),
+                            _summaryRow('Tiền vé Metro', _formatVnd(ticketTotal)),
+                          ],
                           if (hasParking) ...[
                             const SizedBox(height: AppSpacing.xs),
                             _summaryRow(
-                              'Giữ xe ($parkingVehicle - $parkingPackage)',
+                              isParkingOnly
+                                  ? 'Cước phí giữ xe'
+                                  : 'Giữ xe ($parkingVehicle - $parkingPackage)',
                               _formatVnd(parkingFee),
                             ),
                             const SizedBox(height: 4),

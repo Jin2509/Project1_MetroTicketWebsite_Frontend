@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
+import '../models/station_connections_model.dart';
 import '../theme/app_theme.dart';
 import 'metro_card.dart';
 
@@ -7,6 +8,7 @@ import 'metro_card.dart';
 enum AmenityCategory {
   parking,
   bus,
+  entertainment,
   dining,
   atm,
   accessibility,
@@ -138,46 +140,72 @@ class _StationAmenitiesSheetState extends State<StationAmenitiesSheet> {
   };
 
   List<StationAmenityItem> _getAmenitiesForStation(String stationName) {
+    final List<StationAmenityItem> list = [];
+
     if (_mockStationAmenities.containsKey(stationName)) {
-      return _mockStationAmenities[stationName]!;
+      list.addAll(_mockStationAmenities[stationName]!);
+    } else {
+      list.addAll([
+        StationAmenityItem(
+          name: 'Bãi giữ xe ga $stationName',
+          description: 'Trông giữ xe máy và ô tô ngày đêm • Có camera giám sát',
+          category: AmenityCategory.parking,
+          distance: 'Cạnh lối lên ga',
+          icon: PhosphorIconsBold.motorcycle,
+        ),
+        StationAmenityItem(
+          name: 'Cửa hàng tiện ích & Cà phê mang đi',
+          description: 'Cung cấp nước giải khát, bánh mì & nạp tiền thẻ',
+          category: AmenityCategory.dining,
+          distance: 'Sảnh tầng 1',
+          icon: PhosphorIconsBold.coffee,
+        ),
+        StationAmenityItem(
+          name: 'Cây rút tiền tự động ATM',
+          description: 'ATM liên minh Napas chấp nhận tất cả ngân hàng',
+          category: AmenityCategory.atm,
+          distance: 'Khu vực bán vé',
+          icon: PhosphorIconsBold.creditCard,
+        ),
+        StationAmenityItem(
+          name: 'Thang máy & Lối đi cho người khuyết tật',
+          description: 'Trang bị gạch dẫn hướng cho người khiếm thị',
+          category: AmenityCategory.accessibility,
+          distance: 'Lối vào chính',
+          icon: PhosphorIconsBold.wheelchair,
+        ),
+      ]);
     }
-    return [
-      StationAmenityItem(
-        name: 'Bãi giữ xe ga $stationName',
-        description: 'Trông giữ xe máy ngày đêm • Có camera giám sát',
-        category: AmenityCategory.parking,
-        distance: 'Cạnh lối lên ga',
-        icon: PhosphorIconsBold.motorcycle,
-      ),
-      StationAmenityItem(
-        name: 'Trạm xe buýt kết nối ga $stationName',
-        description: 'Các tuyến buýt gom kết nối khu dân cư lân cận',
-        category: AmenityCategory.bus,
-        distance: 'Cách 50m',
-        icon: PhosphorIconsBold.bus,
-      ),
-      StationAmenityItem(
-        name: 'Cửa hàng tiện ích & Cà phê mang đi',
-        description: 'Cung cấp nước giải khát, bánh mì & nạp tiền thẻ',
-        category: AmenityCategory.dining,
-        distance: 'Sảnh tầng 1',
-        icon: PhosphorIconsBold.coffee,
-      ),
-      StationAmenityItem(
-        name: 'Cây rút tiền tự động ATM',
-        description: 'ATM liên minh Napas chấp nhận tất cả ngân hàng',
-        category: AmenityCategory.atm,
-        distance: 'Khu vực bán vé',
-        icon: PhosphorIconsBold.creditCard,
-      ),
-      StationAmenityItem(
-        name: 'Thang máy & Lối đi cho người khuyết tật',
-        description: 'Trang bị gạch dẫn hướng cho người khiếm thị',
-        category: AmenityCategory.accessibility,
-        distance: 'Lối vào chính',
-        icon: PhosphorIconsBold.wheelchair,
-      ),
-    ];
+
+    // Append rich dynamic Bus Connections
+    final busConnections = StationConnectionsData.getBusConnections(stationName);
+    for (final bus in busConnections) {
+      list.add(
+        StationAmenityItem(
+          name: 'Tuyến ${bus.routeNumber}: ${bus.routeName}',
+          description: '${bus.operatingHours} • ${bus.frequency} • Vé ${bus.fare}',
+          category: AmenityCategory.bus,
+          distance: bus.busStopLocation,
+          icon: bus.isElectric ? PhosphorIconsBold.lightning : PhosphorIconsBold.bus,
+        ),
+      );
+    }
+
+    // Append rich dynamic Destinations & Entertainment Spots
+    final destinations = StationConnectionsData.getDestinations(stationName);
+    for (final dest in destinations) {
+      list.add(
+        StationAmenityItem(
+          name: dest.name,
+          description: '${dest.description} • ${dest.exitGate}',
+          category: AmenityCategory.entertainment,
+          distance: '${dest.distance} (${dest.walkTime})',
+          icon: dest.icon,
+        ),
+      );
+    }
+
+    return list;
   }
 
   @override
@@ -397,6 +425,12 @@ class _StationAmenitiesSheetState extends State<StationAmenitiesSheet> {
                   AmenityCategory.bus,
                   'Xe buýt gom',
                   PhosphorIconsBold.bus,
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                _buildCategoryTab(
+                  AmenityCategory.entertainment,
+                  'Điểm giải trí',
+                  PhosphorIconsBold.sparkle,
                 ),
                 const SizedBox(width: AppSpacing.xs),
                 _buildCategoryTab(

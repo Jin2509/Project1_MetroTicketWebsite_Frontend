@@ -231,7 +231,7 @@ class _MainShellState extends State<MainShell> {
   );
 }
 
-  // --- 2. CỤM 7 PHÍM TẮT TIỆN ÍCH NHANH ---
+  // --- 2. CỤM 8 PHÍM TẮT TIỆN ÍCH NHANH CÂN ĐỐI (LƯỚI 4x2) ---
   Widget _buildQuickShortcutsGrid(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -241,7 +241,7 @@ class _MainShellState extends State<MainShell> {
             const PhosphorIcon(
               PhosphorIconsBold.squaresFour,
               size: 16,
-              color: AppColors.primaryText,
+              color: AppColors.primary,
             ),
             const SizedBox(width: 6),
             Text(
@@ -255,7 +255,7 @@ class _MainShellState extends State<MainShell> {
           ],
         ),
         const SizedBox(height: AppSpacing.sm),
-        // Row 1: 4 items (Đặt vé, Kiểm tra vé, Tra cứu map, Tra cứu ga)
+        // Hàng 1: 4 phím (Đặt vé, Kiểm tra vé, Tra cứu map, Tra cứu ga)
         Row(
           children: [
             Expanded(
@@ -267,12 +267,12 @@ class _MainShellState extends State<MainShell> {
                 onTap: () => Navigator.of(context).pushNamed('/booking'),
               ),
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: 8),
             Expanded(
               child: _buildShortcutItem(
                 title: 'Kiểm tra vé',
                 icon: PhosphorIconsBold.qrCode,
-                iconColor: AppColors.primaryText,
+                iconColor: AppColors.primary,
                 iconBgColor: AppColors.primaryLight,
                 onTap: () {
                   final activeTickets = TicketStore.instance.activeTickets;
@@ -284,48 +284,58 @@ class _MainShellState extends State<MainShell> {
                 },
               ),
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: 8),
             Expanded(
               child: _buildShortcutItem(
                 title: 'Tra cứu map',
                 icon: PhosphorIconsBold.mapTrifold,
-                iconColor: const Color(0xFF38BDF8),
-                iconBgColor: const Color(0xFF132F4C),
+                iconColor: const Color(0xFF0284C7),
+                iconBgColor: const Color(0xFFE0F2FE),
                 onTap: () => setState(() => _currentIndex = 1),
               ),
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: 8),
             Expanded(
               child: _buildShortcutItem(
                 title: 'Tra cứu ga',
                 icon: PhosphorIconsBold.magnifyingGlass,
-                iconColor: const Color(0xFFFFA928),
-                iconBgColor: const Color(0xFF3B2606),
+                iconColor: const Color(0xFFD97706),
+                iconBgColor: const Color(0xFFFEF3C7),
                 onTap: () => StationAmenitiesSheet.show(context, openDirectoryMode: true),
               ),
             ),
           ],
         ),
         const SizedBox(height: 8),
-        // Row 2: 3 items (Tiện ích quanh ga, Chatbot, Check-in)
+        // Hàng 2: 4 phím (Tiện ích quanh ga, Lịch chạy tàu, Chatbot AI, Check-in)
         Row(
           children: [
             Expanded(
               child: _buildShortcutItem(
                 title: 'Tiện ích quanh ga',
                 icon: PhosphorIconsBold.storefront,
-                iconColor: const Color(0xFF00E59E),
-                iconBgColor: const Color(0xFF003827),
+                iconColor: const Color(0xFF16A34A),
+                iconBgColor: const Color(0xFFDCFCE7),
                 onTap: () => StationAmenitiesSheet.show(context, openDirectoryMode: false),
               ),
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: 8),
             Expanded(
               child: _buildShortcutItem(
-                title: 'Chatbot',
+                title: 'Lịch chạy tàu',
+                icon: PhosphorIconsBold.clockCountdown,
+                iconColor: const Color(0xFF9333EA),
+                iconBgColor: const Color(0xFFF3E8FF),
+                onTap: () => Navigator.of(context).pushNamed('/schedule-lookup'),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _buildShortcutItem(
+                title: 'Chatbot AI',
                 icon: PhosphorIconsBold.chatTeardropDots,
-                iconColor: const Color(0xFFE879F9),
-                iconBgColor: const Color(0xFF3B124C),
+                iconColor: const Color(0xFFDB2777),
+                iconBgColor: const Color(0xFFFCE7F3),
                 onTap: () => showModalBottomSheet(
                   context: context,
                   isScrollControlled: true,
@@ -334,12 +344,12 @@ class _MainShellState extends State<MainShell> {
                 ),
               ),
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: 8),
             Expanded(
               child: _buildShortcutItem(
                 title: 'Check-in',
                 icon: PhosphorIconsBold.signIn,
-                iconColor: AppColors.success,
+                iconColor: AppColors.successText,
                 iconBgColor: AppColors.successLight,
                 onTap: () {
                   final isCheckedIn = TicketStore.instance.isCheckedIn;
@@ -379,26 +389,21 @@ class _MainShellState extends State<MainShell> {
       onTap: onTap,
       borderRadius: BorderRadius.circular(AppRadius.lg),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+        height: 86,
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
         decoration: BoxDecoration(
-          color: AppColors.surfaceSecondary,
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(AppRadius.lg),
           border: Border.all(color: AppColors.borderSubtle),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x1A000000),
-              blurRadius: 6,
-              offset: Offset(0, 2),
-            ),
-          ],
+          boxShadow: AppShadows.subtle,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 40,
-              height: 40,
+              width: 38,
+              height: 38,
               decoration: BoxDecoration(
                 color: iconBgColor,
                 borderRadius: BorderRadius.circular(AppRadius.md),
@@ -412,7 +417,7 @@ class _MainShellState extends State<MainShell> {
                 ),
               ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 5),
             Text(
               title,
               textAlign: TextAlign.center,
@@ -420,7 +425,7 @@ class _MainShellState extends State<MainShell> {
               overflow: TextOverflow.ellipsis,
               style: AppTypography.textTheme.bodySmall?.copyWith(
                 fontWeight: FontWeight.w700,
-                fontSize: 11,
+                fontSize: 10.5,
                 color: AppColors.textPrimary,
                 height: 1.15,
               ),
