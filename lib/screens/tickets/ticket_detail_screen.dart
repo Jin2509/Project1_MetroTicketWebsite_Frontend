@@ -156,6 +156,69 @@ class TicketDetailScreen extends StatelessWidget {
                   ],
                 ),
               ),
+              if (ticket.parking != null) ...[
+                const SizedBox(height: AppSpacing.lg),
+                MetroCard(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              PhosphorIcon(
+                                ticket.parking!.vehicleType == 'Ô tô'
+                                    ? PhosphorIconsRegular.car
+                                    : PhosphorIconsRegular.moped,
+                                size: 18,
+                                color: AppColors.primary,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'DỊCH VỤ GIỮ XE TẠI GA',
+                                style: AppTypography.textTheme.labelSmall?.copyWith(
+                                  color: AppColors.primary,
+                                  letterSpacing: 1.1,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: AppColors.successLight,
+                              borderRadius: BorderRadius.circular(AppRadius.pill),
+                            ),
+                            child: Text(
+                              'Đã đăng ký',
+                              style: AppTypography.textTheme.labelSmall?.copyWith(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.success,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      _tableRow('Ga gửi xe', 'Ga ${ticket.parking!.station}'),
+                      const Divider(height: 20),
+                      _tableRow('Biển số xe', ticket.parking!.licensePlate),
+                      const Divider(height: 20),
+                      _tableRow('Chủ phương tiện', ticket.parking!.ownerName),
+                      const Divider(height: 20),
+                      _tableRow('Phương tiện', ticket.parking!.vehicleType),
+                      const Divider(height: 20),
+                      _tableRow('Gói dịch vụ', ticket.parking!.packageType),
+                      const Divider(height: 20),
+                      _tableRow('Cước phí giữ xe', ticket.parking!.formattedPrice),
+                    ],
+                  ),
+                ),
+              ],
 
               const SizedBox(height: AppSpacing.xl),
 

@@ -180,6 +180,110 @@ class PaymentSuccessScreen extends StatelessWidget {
                     ),
                   ),
 
+                  // 4b. PARKING CONFIRMATION CARD (IF RESERVED)
+                  if (ticket.parking != null) ...[
+                    const SizedBox(height: AppSpacing.md),
+                    MetroCard(
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      borderRadius: AppRadius.lg,
+                      border: Border.all(
+                        color: AppColors.primary.withValues(alpha: 0.3),
+                        width: 1.2,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(6),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primaryLight,
+                                      borderRadius: BorderRadius.circular(AppRadius.sm),
+                                    ),
+                                    child: PhosphorIcon(
+                                      ticket.parking!.vehicleType == 'Ô tô'
+                                          ? PhosphorIconsRegular.car
+                                          : PhosphorIconsRegular.moped,
+                                      size: 16,
+                                      color: AppColors.primary,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'CHỖ GIỮ XE ĐÃ XÁC NHẬN',
+                                    style: AppTypography.textTheme.labelSmall?.copyWith(
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColors.primary,
+                                      letterSpacing: 0.6,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: AppColors.successLight,
+                                  borderRadius: BorderRadius.circular(AppRadius.pill),
+                                ),
+                                child: Text(
+                                  'Đã giữ chỗ',
+                                  style: AppTypography.textTheme.labelSmall?.copyWith(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.success,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const Divider(height: 18),
+                          _infoRow('Ga gửi xe', 'Ga ${ticket.parking!.station}'),
+                          const Divider(height: 14),
+                          _infoRow('Biển số xe', ticket.parking!.licensePlate, isHighlighted: true),
+                          const Divider(height: 14),
+                          _infoRow('Chủ phương tiện', ticket.parking!.ownerName),
+                          const Divider(height: 14),
+                          _infoRow('Phương tiện', ticket.parking!.vehicleType),
+                          const Divider(height: 14),
+                          _infoRow('Gói gửi xe', ticket.parking!.packageType),
+                          const Divider(height: 14),
+                          _infoRow('Cước phí giữ xe', ticket.parking!.formattedPrice),
+                          const SizedBox(height: 10),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: AppColors.surfaceSecondary,
+                              borderRadius: BorderRadius.circular(AppRadius.sm),
+                            ),
+                            child: Row(
+                              children: [
+                                const PhosphorIcon(
+                                  PhosphorIconsRegular.info,
+                                  size: 14,
+                                  color: AppColors.textSecondary,
+                                ),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    'Vui lòng xuất trình biển số xe và mã vé này cho nhân viên khi gửi/lấy xe tại ga.',
+                                    style: AppTypography.textTheme.bodySmall?.copyWith(
+                                      fontSize: 11,
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+
                   const SizedBox(height: AppSpacing.xl),
 
                   // 5. DUAL ACTION BUTTONS

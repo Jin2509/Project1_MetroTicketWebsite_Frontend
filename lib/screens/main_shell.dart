@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -10,7 +11,9 @@ import '../widgets/metro_bottom_nav.dart';
 import '../widgets/metro_card.dart';
 import '../widgets/primary_button.dart';
 import '../widgets/screen_switcher_sheet.dart';
+import '../widgets/station_amenities_sheet.dart';
 import '../widgets/vietnam_map_background.dart';
+import 'ai/compact_ai_chat_sheet.dart';
 import 'map/search_map_screen.dart';
 import 'news/article_detail_screen.dart';
 import 'profile/profile_screen.dart';
@@ -55,10 +58,37 @@ class _MainShellState extends State<MainShell> {
     'Bến Xe Suối Tiên',
   ];
 
+  late PageController _newsPageController;
+  int _currentNewsPage = 0;
+  Timer? _newsAutoScrollTimer;
+
   @override
   void initState() {
     super.initState();
     _currentIndex = widget.initialTab;
+    _newsPageController = PageController(viewportFraction: 0.90);
+    _startNewsAutoScroll();
+  }
+
+  @override
+  void dispose() {
+    _newsAutoScrollTimer?.cancel();
+    _newsPageController.dispose();
+    super.dispose();
+  }
+
+  void _startNewsAutoScroll() {
+    _newsAutoScrollTimer?.cancel();
+    _newsAutoScrollTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+      if (_newsPageController.hasClients && NewsData.articles.isNotEmpty) {
+        final nextPage = (_currentNewsPage + 1) % NewsData.articles.length;
+        _newsPageController.animateToPage(
+          nextPage,
+          duration: const Duration(milliseconds: 700),
+          curve: Curves.easeInOutCubic,
+        );
+      }
+    });
   }
 
   @override
@@ -177,22 +207,22 @@ class _MainShellState extends State<MainShell> {
 
             const SizedBox(height: AppSpacing.md),
 
-            // 2. Check-in / Check-out Section
+            // 2. CỤM 7 PHÍM TẮT NHANH (Đặt vé, Kiểm tra vé, Tra cứu map, Tra cứu ga, Tiện ích quanh ga, Chatbot, Check-in)
+            _buildQuickShortcutsGrid(context),
+
+            const SizedBox(height: AppSpacing.lg),
+
+            // 3. Check-in / Check-out Section
             _buildCheckInOutSection(context),
 
-            const SizedBox(height: AppSpacing.md),
+            const SizedBox(height: AppSpacing.lg),
 
-            // 3. Action Buttons Row (Mua vé & Vé của tôi)
-            _buildActionButtonsRow(context),
-
-            const SizedBox(height: AppSpacing.xl),
-
-            // 3. Quick Route Search Card
+            // 4. Quick Route Search Card
             _buildQuickRouteCard(context),
 
             const SizedBox(height: AppSpacing.xl),
 
-            // 4. Metro News & Updates with Network Image Thumbnails
+            // 5. Metro News & Updates with Film-style Horizontal Carousel
             _buildNewsSection(context),
           ],
         ),
@@ -200,6 +230,206 @@ class _MainShellState extends State<MainShell> {
     ),
   );
 }
+
+  // --- 2. CỤM 7 PHÍM TẮT TIỆN ÍCH NHANH ---
+  Widget _buildQuickShortcutsGrid(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const PhosphorIcon(
+              PhosphorIconsBold.squaresFour,
+              size: 16,
+              color: AppColors.primaryText,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              'TIỆN ÍCH NHANH',
+              style: AppTypography.textTheme.labelMedium?.copyWith(
+                letterSpacing: 1.1,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        // Row 1: 4 items (Đặt vé, Kiểm tra vé, Tra cứu map, Tra cứu ga)
+        Row(
+          children: [
+            Expanded(
+              child: _buildShortcutItem(
+                title: 'Đặt vé',
+                icon: PhosphorIconsBold.ticket,
+                iconColor: Colors.white,
+                iconBgColor: AppColors.primary,
+                onTap: () => Navigator.of(context).pushNamed('/booking'),
+              ),
+            ),
+            const SizedBox(width: 6),
+            Expanded(
+              child: _buildShortcutItem(
+                title: 'Kiểm tra vé',
+                icon: PhosphorIconsBold.qrCode,
+                iconColor: AppColors.primaryText,
+                iconBgColor: AppColors.primaryLight,
+                onTap: () {
+                  final activeTickets = TicketStore.instance.activeTickets;
+                  if (activeTickets.isNotEmpty) {
+                    _showTurnstilePassSheet(context, activeTickets.first);
+                  } else {
+                    _showNoActiveTicketDialog(context);
+                  }
+                },
+              ),
+            ),
+            const SizedBox(width: 6),
+            Expanded(
+              child: _buildShortcutItem(
+                title: 'Tra cứu map',
+                icon: PhosphorIconsBold.mapTrifold,
+                iconColor: const Color(0xFF38BDF8),
+                iconBgColor: const Color(0xFF132F4C),
+                onTap: () => setState(() => _currentIndex = 1),
+              ),
+            ),
+            const SizedBox(width: 6),
+            Expanded(
+              child: _buildShortcutItem(
+                title: 'Tra cứu ga',
+                icon: PhosphorIconsBold.magnifyingGlass,
+                iconColor: const Color(0xFFFFA928),
+                iconBgColor: const Color(0xFF3B2606),
+                onTap: () => StationAmenitiesSheet.show(context, openDirectoryMode: true),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        // Row 2: 3 items (Tiện ích quanh ga, Chatbot, Check-in)
+        Row(
+          children: [
+            Expanded(
+              child: _buildShortcutItem(
+                title: 'Tiện ích quanh ga',
+                icon: PhosphorIconsBold.storefront,
+                iconColor: const Color(0xFF00E59E),
+                iconBgColor: const Color(0xFF003827),
+                onTap: () => StationAmenitiesSheet.show(context, openDirectoryMode: false),
+              ),
+            ),
+            const SizedBox(width: 6),
+            Expanded(
+              child: _buildShortcutItem(
+                title: 'Chatbot',
+                icon: PhosphorIconsBold.chatTeardropDots,
+                iconColor: const Color(0xFFE879F9),
+                iconBgColor: const Color(0xFF3B124C),
+                onTap: () => showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (context) => const CompactAiChatSheet(),
+                ),
+              ),
+            ),
+            const SizedBox(width: 6),
+            Expanded(
+              child: _buildShortcutItem(
+                title: 'Check-in',
+                icon: PhosphorIconsBold.signIn,
+                iconColor: AppColors.success,
+                iconBgColor: AppColors.successLight,
+                onTap: () {
+                  final isCheckedIn = TicketStore.instance.isCheckedIn;
+                  final activeTickets = TicketStore.instance.activeTickets;
+                  if (isCheckedIn) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Đang trong chuyến đi từ Ga ${TicketStore.instance.checkInStation}!'),
+                        backgroundColor: AppColors.primary,
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                    _showTurnstilePassSheet(context, activeTickets.first);
+                  } else if (activeTickets.isEmpty) {
+                    _showNoActiveTicketDialog(context);
+                  } else {
+                    TicketStore.instance.checkIn(_selectedCheckInStation, activeTickets.first);
+                    _showTurnstilePassSheet(context, activeTickets.first);
+                  }
+                },
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildShortcutItem({
+    required String title,
+    required PhosphorIconData icon,
+    required Color iconColor,
+    required Color iconBgColor,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppRadius.lg),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceSecondary,
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+          border: Border.all(color: AppColors.borderSubtle),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x1A000000),
+              blurRadius: 6,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: iconBgColor,
+                borderRadius: BorderRadius.circular(AppRadius.md),
+                border: Border.all(color: iconColor.withValues(alpha: 0.2)),
+              ),
+              child: Center(
+                child: PhosphorIcon(
+                  icon,
+                  color: iconColor,
+                  size: 20,
+                ),
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: AppTypography.textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w700,
+                fontSize: 11,
+                color: AppColors.textPrimary,
+                height: 1.15,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   // --- 1. ACTIVE TICKET BOARDING PASS CARD ---
   Widget _buildActiveTicketCard(BuildContext context) {
@@ -981,73 +1211,7 @@ class _MainShellState extends State<MainShell> {
     );
   }
 
-  // --- 3. ACTION BUTTONS ROW ---
-  Widget _buildActionButtonsRow(BuildContext context) {
-    return Row(
-      children: [
-        // Button 1: Mua vé
-        Expanded(
-          child: ElevatedButton.icon(
-            onPressed: () {
-              Navigator.of(context).pushNamed('/booking');
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppRadius.md),
-              ),
-              elevation: 0,
-            ),
-            icon: const PhosphorIcon(
-              PhosphorIconsBold.plus,
-              size: 18,
-            ),
-            label: Text(
-              'Mua vé',
-              style: AppTypography.textTheme.labelLarge?.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-        ),
 
-        const SizedBox(width: AppSpacing.sm),
-
-        // Button 2: Quản lý vé
-        Expanded(
-          child: OutlinedButton.icon(
-            onPressed: () {
-              setState(() => _currentIndex = 2);
-            },
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.primary,
-              side: const BorderSide(color: AppColors.primary, width: 1.5),
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppRadius.md),
-              ),
-              elevation: 0,
-            ),
-            icon: const PhosphorIcon(
-              PhosphorIconsBold.ticket,
-              color: AppColors.primary,
-              size: 18,
-            ),
-            label: Text(
-              'Vé của tôi',
-              style: AppTypography.textTheme.labelLarge?.copyWith(
-                color: AppColors.primary,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
 
   // --- TURNSTILE PASS SHEET (QR Loại 2 - QR Vé đã mua) ---
   void _showTurnstilePassSheet(BuildContext context, Ticket ticket) {
@@ -1409,170 +1573,347 @@ class _MainShellState extends State<MainShell> {
     );
   }
 
-  // --- 4. NEWS SECTION (Image.network with loading & fallback) ---
+  // --- 4. NEWS SECTION (Horizontal Film-Style Carousel with 10s Auto-Scroll) ---
   Widget _buildNewsSection(BuildContext context) {
-    final displayArticles = NewsData.articles.take(2).toList();
+    final articles = NewsData.articles;
+    if (articles.isEmpty) return const SizedBox.shrink();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Tin tức & Cập nhật',
-              style: AppTypography.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            InkWell(
-              onTap: () => Navigator.of(context).pushNamed('/news'),
-              child: Text(
-                'Xem tất cả',
-                style: AppTypography.textTheme.labelMedium?.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        ...displayArticles.map((article) {
-          return Padding(
-            padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-            child: MetroCard(
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => ArticleDetailScreen(article: article),
-                  ),
-                );
-              },
-              padding: const EdgeInsets.all(AppSpacing.sm),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
+        // Header
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
                 children: [
-                  // Network image with loading placeholder & error fallback
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(AppRadius.md),
-                    child: Image.network(
-                      article.imageUrl ?? '',
-                      width: 88,
-                      height: 88,
-                      fit: BoxFit.cover,
-                      loadingBuilder: (context, child, loadingProgress) {
-                        if (loadingProgress == null) return child;
-                        return Container(
-                          width: 88,
-                          height: 88,
-                          color: AppColors.surfaceSecondary,
-                          child: const Center(
-                            child: SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: AppColors.primary,
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          width: 88,
-                          height: 88,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: article.gradientColors,
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                          ),
-                          child: const Center(
-                            child: PhosphorIcon(
-                              PhosphorIconsRegular.newspaper,
-                              color: Colors.white,
-                              size: 28,
-                            ),
-                          ),
-                        );
-                      },
+                  Container(
+                    width: 4,
+                    height: 18,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(2),
                     ),
                   ),
+                  const SizedBox(width: AppSpacing.xs),
+                  Text(
+                    'Tin tức & Sự kiện',
+                    style: AppTypography.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+              InkWell(
+                onTap: () => Navigator.of(context).pushNamed('/news'),
+                borderRadius: BorderRadius.circular(AppRadius.sm),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                  child: Row(
+                    children: [
+                      Text(
+                        'Xem tất cả',
+                        style: AppTypography.textTheme.labelMedium?.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(width: 2),
+                      const PhosphorIcon(
+                        PhosphorIconsRegular.caretRight,
+                        size: 14,
+                        color: AppColors.primary,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
 
-                  const SizedBox(width: AppSpacing.md),
-
-                  // Article details
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
+        // Horizontal Film-App Style Carousel
+        SizedBox(
+          height: 195,
+          child: PageView.builder(
+            controller: _newsPageController,
+            onPageChanged: (index) {
+              setState(() {
+                _currentNewsPage = index;
+              });
+            },
+            itemCount: articles.length,
+            itemBuilder: (context, index) {
+              final article = articles[index];
+              return AnimatedBuilder(
+                animation: _newsPageController,
+                builder: (context, child) {
+                  double scale = 1.0;
+                  if (_newsPageController.position.haveDimensions) {
+                    final page = _newsPageController.page ?? _currentNewsPage.toDouble();
+                    scale = (1.0 - ((page - index).abs() * 0.04)).clamp(0.92, 1.0);
+                  }
+                  return Transform.scale(
+                    scale: scale,
+                    child: child,
+                  );
+                },
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 6),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(AppRadius.lg),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.35),
+                        blurRadius: 12,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(AppRadius.lg),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => ArticleDetailScreen(article: article),
+                            ),
+                          );
+                        },
+                        child: Stack(
+                          fit: StackFit.expand,
                           children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.primaryLight,
-                                borderRadius: BorderRadius.circular(AppRadius.sm),
-                              ),
-                              child: Text(
-                                article.category.toUpperCase(),
-                                style: AppTypography.textTheme.labelSmall?.copyWith(
-                                  color: AppColors.primary,
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 9,
+                            // Poster Image / Gradient Fallback
+                            Image.network(
+                              article.imageUrl ?? '',
+                              fit: BoxFit.cover,
+                              loadingBuilder: (context, child, loadingProgress) {
+                                if (loadingProgress == null) return child;
+                                return Container(
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: article.gradientColors,
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                  ),
+                                  child: const Center(
+                                    child: SizedBox(
+                                      width: 24,
+                                      height: 24,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white70,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: article.gradientColors,
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                  ),
+                                  child: Center(
+                                    child: PhosphorIcon(
+                                      article.icon,
+                                      color: Colors.white38,
+                                      size: 56,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+
+                            // Film Noir / Cinematic Dark Gradient Overlays
+                            Positioned.fill(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topCenter,
+                                    end: Alignment.bottomCenter,
+                                    colors: [
+                                      Colors.black.withValues(alpha: 0.25),
+                                      Colors.transparent,
+                                      Colors.black.withValues(alpha: 0.75),
+                                      Colors.black.withValues(alpha: 0.95),
+                                    ],
+                                    stops: const [0.0, 0.35, 0.7, 1.0],
+                                  ),
                                 ),
                               ),
                             ),
-                            const SizedBox(width: AppSpacing.xs),
-                            Text(
-                              article.date,
-                              style: AppTypography.textTheme.labelSmall?.copyWith(
-                                color: AppColors.textSecondary,
-                                fontSize: 11,
+
+                            // Top Badges (Category + Read Time)
+                            Positioned(
+                              top: 12,
+                              left: 14,
+                              right: 14,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primary.withValues(alpha: 0.85),
+                                      borderRadius: BorderRadius.circular(AppRadius.sm),
+                                      border: Border.all(
+                                        color: Colors.white.withValues(alpha: 0.2),
+                                      ),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        PhosphorIcon(
+                                          article.icon,
+                                          size: 11,
+                                          color: Colors.white,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          article.category.toUpperCase(),
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w800,
+                                            fontSize: 9,
+                                            letterSpacing: 0.5,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                                    decoration: BoxDecoration(
+                                      color: Colors.black.withValues(alpha: 0.6),
+                                      borderRadius: BorderRadius.circular(AppRadius.sm),
+                                      border: Border.all(
+                                        color: Colors.white.withValues(alpha: 0.15),
+                                      ),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const PhosphorIcon(
+                                          PhosphorIconsRegular.clock,
+                                          size: 11,
+                                          color: Colors.white70,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          article.readTime,
+                                          style: const TextStyle(
+                                            color: Colors.white70,
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            // Bottom Content (Cinema-style Typography)
+                            Positioned(
+                              bottom: 12,
+                              left: 14,
+                              right: 14,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    article.title,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w700,
+                                      height: 1.25,
+                                      shadows: [
+                                        Shadow(
+                                          offset: Offset(0, 1),
+                                          blurRadius: 4,
+                                          color: Colors.black87,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          article.subtitle,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            color: Colors.white.withValues(alpha: 0.8),
+                                            fontSize: 11,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Container(
+                                        padding: const EdgeInsets.all(4),
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: Colors.white.withValues(alpha: 0.2),
+                                        ),
+                                        child: const PhosphorIcon(
+                                          PhosphorIconsBold.arrowRight,
+                                          size: 12,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          article.title,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTypography.textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            height: 1.25,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          article.subtitle,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTypography.textTheme.bodySmall?.copyWith(
-                            color: AppColors.textSecondary,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                   ),
-                  const SizedBox(width: AppSpacing.xs),
-                  const PhosphorIcon(
-                    PhosphorIconsRegular.caretRight,
-                    size: 16,
-                    color: AppColors.textSecondary,
-                  ),
-                ],
+                ),
+              );
+            },
+          ),
+        ),
+
+        const SizedBox(height: AppSpacing.sm),
+
+        // Film App Page Indicator Dots (Pill for active)
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: List.generate(articles.length, (dotIndex) {
+            final isActive = dotIndex == _currentNewsPage;
+            return AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOutCubic,
+              margin: const EdgeInsets.symmetric(horizontal: 3),
+              width: isActive ? 18 : 6,
+              height: 5,
+              decoration: BoxDecoration(
+                color: isActive ? AppColors.primary : AppColors.border,
+                borderRadius: BorderRadius.circular(3),
               ),
-            ),
-          );
-        }),
+            );
+          }),
+        ),
       ],
     );
   }

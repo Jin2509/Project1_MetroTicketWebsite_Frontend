@@ -18,6 +18,38 @@ enum TicketType {
   }
 }
 
+class ParkingBooking {
+  final String station;
+  final String ownerName;
+  final String licensePlate;
+  final String packageType; // '1 buổi (5.000đ)' or '1 ngày (10.000đ)' or 'Qua đêm (15.000đ)'
+  final String vehicleType; // 'Xe máy' or 'Ô tô'
+  final int price;
+
+  const ParkingBooking({
+    required this.station,
+    required this.ownerName,
+    required this.licensePlate,
+    required this.packageType,
+    this.vehicleType = 'Xe máy',
+    required this.price,
+  });
+
+  String get formattedPrice {
+    final str = price.toString();
+    final buffer = StringBuffer();
+    int count = 0;
+    for (int i = str.length - 1; i >= 0; i--) {
+      buffer.write(str[i]);
+      count++;
+      if (count % 3 == 0 && i != 0) {
+        buffer.write('.');
+      }
+    }
+    return '${buffer.toString().split('').reversed.join('')} đ';
+  }
+}
+
 class Ticket {
   final String id;
   final String title;
@@ -32,6 +64,7 @@ class Ticket {
   final String lineCode;
   final String qrCodeData;
   final String passengerName;
+  final ParkingBooking? parking;
 
   const Ticket({
     required this.id,
@@ -47,6 +80,7 @@ class Ticket {
     this.lineCode = 'L1',
     required this.qrCodeData,
     this.passengerName = 'Alex Nguyễn',
+    this.parking,
   });
 
   String get formattedPrice {

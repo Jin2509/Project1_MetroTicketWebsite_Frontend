@@ -393,6 +393,20 @@ class _PaymentScreenState extends State<PaymentScreen> {
     final totalPrice = widget.bookingData['totalPrice'] as int;
     final quantity = widget.bookingData['quantity'] as int;
 
+    // Parking reservation info
+    final hasParking = widget.bookingData['hasParking'] as bool? ?? false;
+    ParkingBooking? parkingBooking;
+    if (hasParking) {
+      parkingBooking = ParkingBooking(
+        station: widget.bookingData['parkingStation'] as String? ?? 'Ga Bến Thành',
+        ownerName: widget.bookingData['parkingOwner'] as String? ?? 'Alex Nguyễn',
+        licensePlate: widget.bookingData['parkingPlate'] as String? ?? '',
+        packageType: widget.bookingData['parkingPackage'] as String? ?? '1 buổi',
+        vehicleType: widget.bookingData['parkingVehicle'] as String? ?? 'Xe máy',
+        price: widget.bookingData['parkingFee'] as int? ?? 5000,
+      );
+    }
+
     final newTicket = Ticket(
       id: randomId,
       title: title,
@@ -405,7 +419,10 @@ class _PaymentScreenState extends State<PaymentScreen> {
       purchaseDate: DateTime.now(),
       quantity: quantity,
       qrCodeData: 'METROGO:TICKET:$randomId:${ticketType.name.toUpperCase()}:$totalPrice',
-      passengerName: 'Alex Nguyen',
+      passengerName: hasParking
+          ? (widget.bookingData['parkingOwner'] as String? ?? 'Alex Nguyễn')
+          : 'Alex Nguyễn',
+      parking: parkingBooking,
     );
 
     // Save into global TicketStore
@@ -432,6 +449,14 @@ class _PaymentScreenState extends State<PaymentScreen> {
     final quantity = widget.bookingData['quantity'] as int? ?? 1;
     final totalPrice = widget.bookingData['totalPrice'] as int? ?? 15000;
     final validity = widget.bookingData['validity'] as String? ?? 'Hiệu lực 4 giờ';
+    final hasParking = widget.bookingData['hasParking'] as bool? ?? false;
+    final parkingStation = widget.bookingData['parkingStation'] as String? ?? '';
+    final parkingOwner = widget.bookingData['parkingOwner'] as String? ?? '';
+    final parkingPlate = widget.bookingData['parkingPlate'] as String? ?? '';
+    final parkingVehicle = widget.bookingData['parkingVehicle'] as String? ?? 'Xe máy';
+    final parkingPackage = widget.bookingData['parkingPackage'] as String? ?? '1 buổi';
+    final parkingFee = widget.bookingData['parkingFee'] as int? ?? 0;
+    final ticketTotal = widget.bookingData['ticketTotal'] as int? ?? (totalPrice - parkingFee);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -519,7 +544,49 @@ class _PaymentScreenState extends State<PaymentScreen> {
                             child: Divider(height: 1),
                           ),
                           // Line items
-                          _summaryRow('Số lượng', '$quantity vé'),
+                          _summaryRow('Số lượng vé', '$quantity vé'),
+                          const SizedBox(height: AppSpacing.xs),
+                          _summaryRow('Tiền vé Metro', _formatVnd(ticketTotal)),
+                          if (hasParking) ...[
+                            const SizedBox(height: AppSpacing.xs),
+                            _summaryRow(
+                              'Giữ xe ($parkingVehicle - $parkingPackage)',
+                              _formatVnd(parkingFee),
+                            ),
+                            const SizedBox(height: 4),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.primaryLight.withValues(alpha: 0.5),
+                                borderRadius: BorderRadius.circular(AppRadius.sm),
+                              ),
+                              child: Row(
+                                children: [
+                                  PhosphorIcon(
+                                    parkingVehicle == 'Ô tô'
+                                        ? PhosphorIconsRegular.car
+                                        : PhosphorIconsRegular.moped,
+                                    size: 14,
+                                    color: AppColors.primary,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: Text(
+                                      'Ga $parkingStation • BS: $parkingPlate • Chủ xe: $parkingOwner',
+                                      style: AppTypography.textTheme.bodySmall?.copyWith(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w600,
+                                        color: AppColors.primary,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                           const SizedBox(height: AppSpacing.xs),
                           _summaryRow('Phí tiện ích', '0 đ (Miễn phí)'),
                           const SizedBox(height: AppSpacing.xs),

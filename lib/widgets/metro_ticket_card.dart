@@ -184,6 +184,46 @@ class MetroTicketCard extends StatelessWidget {
                               ),
                             ],
                           ),
+                          if (ticket.parking != null) ...[
+                            const SizedBox(height: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 3,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.18),
+                                borderRadius: BorderRadius.circular(AppRadius.sm),
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.35),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  PhosphorIcon(
+                                    ticket.parking!.vehicleType == 'Ô tô'
+                                        ? PhosphorIconsRegular.car
+                                        : PhosphorIconsRegular.moped,
+                                    size: 13,
+                                    color: Colors.white,
+                                  ),
+                                  const SizedBox(width: 5),
+                                  Flexible(
+                                    child: Text(
+                                      'Giữ xe: Ga ${ticket.parking!.station} (${ticket.parking!.licensePlate})',
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                     ),
